@@ -21,10 +21,22 @@ export const getPredictionsHistory = async (userId: number) => {
     return apiRequest<any[]>(`/predictions/${userId}`, 'GET');
 };
 
+export const getAlternateScenarios = async (userId: number) => {
+    return apiRequest<any[]>(`/alternate_scenarios/${userId}`, 'GET');
+};
+
+export const getCompareFutures = async (userId: number) => {
+    return apiRequest<any>(`/compare_futures/${userId}`, 'GET');
+};
+
 export const getPredictionInsights = async (userId: number) => {
     return apiRequest<any>(`/prediction_insights/${userId}`, 'GET');
 };
 
 export const chatAssistant = async (userId: number, message: string) => {
     return apiRequest<any>('/chat_assistant', 'POST', { user_id: userId, message });
+};
+
+export const submitSupport = async (userId: number, subject: string, message: string, category: string) => {
+    return apiRequest<any>('/submit_support', 'POST', { user_id: userId, subject, message, category });
 };

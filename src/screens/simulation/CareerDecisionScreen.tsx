@@ -11,7 +11,7 @@ export default function CareerDecisionScreen() {
   const [jobRole, setJobRole] = useState('Engineer');
   const [maritalStatus, setMaritalStatus] = useState('Single');
   const [workingHours, setWorkingHours] = useState(40);
-  const [country, setCountry] = useState('USA');
+  const [country, setCountry] = useState('India');
   const [gender, setGender] = useState('');
   const [incomeLevel, setIncomeLevel] = useState('');
 

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { apiRequest } from '../../api/config';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { 
@@ -31,157 +32,45 @@ export default function NotificationsScreenWeb() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<NotificationType>('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: 'insight',
-      category: 'general',
-      icon: Sparkles,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      title: 'New Daily Insight Available',
-      message: 'Your AI has generated today\'s prediction based on recent activity patterns. 87% confidence in career growth trajectory.',
-      time: '5 minutes ago',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      read: false,
-      actionable: true,
-      actionText: 'View Insight',
-      actionRoute: '/analytics',
-      priority: 'high'
-    },
-    {
-      id: 2,
-      type: 'opportunity',
-      category: 'career',
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      title: 'High-Probability Opportunity Detected',
-      message: 'Career decision window for "Senior Developer Role" is closing in 2 days. AI suggests 92% success probability if acted upon within 48 hours.',
-      time: '2 hours ago',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      read: false,
-      actionable: true,
-      actionText: 'Review Opportunity',
-      actionRoute: '/opportunity-highlights',
-      priority: 'high'
-    },
-    {
-      id: 3,
-      type: 'alert',
-      category: 'finance',
-      icon: AlertTriangle,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100',
-      title: 'Risk Alert: Financial Decision',
-      message: 'Your recent investment simulation shows 35% risk factor. Market conditions have changed since your last analysis. Recommend re-evaluation.',
-      time: '5 hours ago',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      read: false,
-      actionable: true,
-      actionText: 'Re-analyze',
-      actionRoute: '/analytics',
-      priority: 'high'
-    },
-    {
-      id: 4,
-      type: 'goal',
-      category: 'career',
-      icon: Target,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-      title: 'Goal Progress Milestone Reached',
-      message: 'You\'re 75% towards your career goal "Become Tech Lead". You\'ve completed 3 out of 4 key milestones ahead of schedule!',
-      time: '1 day ago',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      read: true,
-      actionable: true,
-      actionText: 'View Progress',
-      actionRoute: '/analysis/growth',
-      priority: 'medium'
-    },
-    {
-      id: 5,
-      type: 'insight',
-      category: 'education',
-      icon: Sparkles,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      title: 'Learning Pattern Insight',
-      message: 'AI detected optimal learning time between 6-8 AM. Your comprehension rate is 40% higher during these hours based on simulation data.',
-      time: '1 day ago',
-      timestamp: new Date(Date.now() - 26 * 60 * 60 * 1000),
-      read: true,
-      actionable: false,
-      priority: 'low'
-    },
-    {
-      id: 6,
-      type: 'alert',
-      category: 'finance',
-      icon: TrendingDown,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100',
-      title: 'Budget Alert',
-      message: 'Monthly spending on "Entertainment" exceeded budget by ₹3,500. This may impact your savings goal for Q2 2026.',
-      time: '2 days ago',
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      read: true,
-      actionable: true,
-      actionText: 'View Analytics',
-      actionRoute: '/analytics',
-      priority: 'medium'
-    },
-    {
-      id: 7,
-      type: 'system',
-      category: 'general',
-      icon: Bell,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-100',
-      title: 'Weekly Summary Ready',
-      message: 'Your personalized weekly summary report is now available. Review your decisions, insights, and upcoming opportunities.',
-      time: '3 days ago',
-      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      read: true,
-      actionable: true,
-      actionText: 'View Summary',
-      actionRoute: '/analytics',
-      priority: 'low'
-    },
-    {
-      id: 8,
-      type: 'opportunity',
-      category: 'education',
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      title: 'Skill Development Opportunity',
-      message: 'Based on career trajectory, learning "Cloud Architecture" now could increase your market value by ₹8-12 LPA within 18 months.',
-      time: '4 days ago',
-      timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-      read: true,
-      actionable: true,
-      actionText: 'Explore Path',
-      actionRoute: '/quick-simulation',
-      priority: 'medium'
-    },
-    {
-      id: 9,
-      type: 'goal',
-      category: 'finance',
-      icon: CheckCircle2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      title: 'Savings Goal Achieved',
-      message: 'Congratulations! You\'ve reached your Q1 2026 savings target of ₹2,50,000 two weeks ahead of schedule.',
-      time: '5 days ago',
-      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      read: true,
-      actionable: false,
-      priority: 'low'
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+       const userStr = localStorage.getItem('user');
+       if (!userStr) return;
+       const user = JSON.parse(userStr);
+       try {
+           setIsLoading(true);
+           const res = await apiRequest<any[]>(`/predictions/${user.user_id}`, 'GET');
+           const mapped = (res || []).map((p: any, i: number) => {
+                const isCareer = p.category?.toLowerCase() === 'career';
+                return {
+                    id: p.prediction_id,
+                    type: 'insight',
+                    category: p.category?.toLowerCase() || 'general',
+                    icon: Sparkles,
+                    color: isCareer ? 'text-blue-600' : 'text-green-600',
+                    bgColor: isCareer ? 'bg-blue-100' : 'bg-green-100',
+                    title: `Simulation: ${p.decision_input || 'New Prediction'}`,
+                    message: `Growth Rating: ${p.success_probability}%. Timeline: ${p.timeline || 'Immediate'}. AI Analysis shows optimal paths.`,
+                    time: new Date(p.created_at).toLocaleDateString(),
+                    timestamp: new Date(p.created_at),
+                    read: false,
+                    actionable: true,
+                    actionText: 'View Details',
+                    actionRoute: '/analytics',
+                    priority: 'medium'
+                };
+           });
+           setNotifications(mapped);
+       } catch (e) {
+       } finally { 
+           setIsLoading(false); 
+       }
+    };
+    fetchNotifications();
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -222,6 +111,16 @@ export default function NotificationsScreenWeb() {
     { value: 'goal', label: 'Goals', icon: Target, color: 'text-purple-600' },
     { value: 'system', label: 'System', icon: Bell, color: 'text-gray-600' }
   ];
+
+  if (isLoading) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full" />
+        </div>
+      </WebLayout>
+    );
+  }
 
   return (
     <WebLayout maxWidth="full">

@@ -38,11 +38,26 @@ export default function RiskVsRewardScreenWeb() {
         );
     }
 
+    // Helper to extract data from both table columns and JSON strings
+    const getStat = (p: any, key: string) => {
+        if (!p) return 0;
+        if (p[key] !== undefined && p[key] !== null && p[key] !== 0) {
+            return parseFloat(p[key]);
+        }
+        if (p.forecast_result) {
+            try {
+                const res = JSON.parse(p.forecast_result);
+                if (res[key]) return parseFloat(res[key]);
+            } catch (e) {}
+        }
+        return 0;
+    };
+
     const scatterData = history.map((h, i) => ({
-        name: h.decision_input?.split(':')[0] || `Sim #${h.id}`,
+        name: h.decision_input?.split(':')[0] || `Sim #${h.prediction_id || i}`,
         risk: h.risk_level === 'High' ? 80 : h.risk_level === 'Medium' ? 50 : 20,
-        reward: Math.round(h.success_probability),
-        category: 'Simulation',
+        reward: Math.round(getStat(h, 'success_probability')),
+        category: h.category || 'Simulation',
         color: i === 0 ? '#8b5cf6' : '#3b82f6',
         fullData: h
     }));
@@ -58,7 +73,7 @@ export default function RiskVsRewardScreenWeb() {
         {
             title: 'Primary Simulation Analysis',
             description: latest 
-                ? `Your last decision "${latest.decision_input?.split(':')[0]}" has a ${Math.round(latest.success_probability)}% success potential. Risk level is classified as ${latest.risk_level}.`
+                ? `Your last decision "${latest.decision_input?.split(':')[0] || 'Simulation'}" has a ${Math.round(getStat(latest, 'success_probability'))}% success potential. Risk level is classified as ${latest.risk_level || 'Low'}.`
                 : 'Run a simulation to see AI risk analysis here.',
             icon: Shield,
             color: 'text-green-600',

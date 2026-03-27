@@ -1,167 +1,364 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { User, Mail, Calendar, MapPin, Edit, TrendingUp, Target, Award, Sparkles, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { User, Upload, TrendingUp, Target, Sparkles, Loader2, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { getPredictionsHistory } from '../../api/prediction';
+import { updateProfile, getProfile } from '../../api/auth';
+import { normalizeProfilePhoto } from '../../utils/profilePhoto';
 
 export default function ProfileScreenWeb() {
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
     const [history, setHistory] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [editEmail, setEditEmail] = useState("");
+    const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+    const [joinDate, setJoinDate] = useState<string>("Feb 2026");
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState<boolean>(false);
+    const [hasError, setHasError] = useState<string | null>(null);
+    const [photoLoadError, setPhotoLoadError] = useState<boolean>(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
-        if (!userStr) {
-            navigate('/login');
-            return;
-        }
-        const userData = JSON.parse(userStr);
-        setUser(userData);
+        if (userStr) {
+            const userData = JSON.parse(userStr);
+            setUser(userData);
+            setEditName(userData.name || "");
+            setEditEmail(userData.email || "");
 
-        const fetchHistory = async () => {
-            try {
-                const data = await getPredictionsHistory(userData.user_id);
-                setHistory(data);
-            } catch (error) {
-                console.error('Failed to fetch history:', error);
-            } finally {
-                setIsLoading(false);
+            // Calculate join date from user data
+            if (userData.created_at) {
+                setJoinDate(new Date(userData.created_at).toLocaleDateString());
             }
-        };
-        fetchHistory();
+
+            // If we already have a profile photo in localStorage, show it right away
+            if (userData.profile_photo) {
+                setSelectedPhoto(normalizeProfilePhoto(userData.profile_photo));
+            }
+
+            // Fetch full profile from database (for the latest photo and user info)
+            getProfile(userData.email).then(profileData => {
+                console.log("Profile response:", profileData);
+                if (profileData) {
+                    const normalizedPhoto = normalizeProfilePhoto(profileData.profile_photo || userData.profile_photo);
+                    if (normalizedPhoto) {
+                        setSelectedPhoto(normalizedPhoto);
+                        setPhotoLoadError(false);
+                    }
+                    const updatedUser = { ...userData, ...profileData, profile_photo: normalizedPhoto };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    setUser(updatedUser);
+                } else {
+                    console.log("No profile data available in database for this user");
+                }
+            }).catch((err) => {
+                console.error('Failed to fetch profile from database:', err);
+                setHasError('Unable to load profile from database.');
+            });
+
+            // Always load predictions to compute success-rate and history data
+            getPredictionsHistory(userData.user_id).then(data => {
+                setHistory(data);
+                if (!userData.created_at && data.length > 0) {
+                    const earliestPrediction = data.reduce((earliest, current) => 
+                        new Date(current.created_at) < new Date(earliest.created_at) ? current : earliest
+                    );
+                    setJoinDate(new Date(earliestPrediction.created_at).toLocaleDateString());
+                }
+            }).catch((err) => {
+                console.error('Failed to load history:', err);
+                setHistory([]);
+                setHasError('Unable to load profile history at this time.');
+            }).finally(() => {
+                setIsLoading(false);
+            });
+        } else {
+            navigate('/login');
+        }
     }, [navigate]);
 
-    if (isLoading || !user) {
-        return (
-            <WebLayout>
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                </div>
-            </WebLayout>
-        );
-    }
+    const handleSaveProfile = async () => {
+        if (!user) return;
 
-    const averageScore = history.length > 0 
-        ? Math.round(history.reduce((acc, curr) => acc + curr.success_probability, 0) / history.length) 
-        : 0;
+        const profilePhotoToSave = normalizeProfilePhoto(selectedPhoto || user.profile_photo || "");
+
+        try {
+            const updated = await updateProfile(user.user_id, editName, editEmail, profilePhotoToSave);
+            if (updated?.status) {
+                const updatedUser = {
+                    ...user,
+                    name: editName,
+                    email: editEmail,
+                    profile_photo: profilePhotoToSave,
+                };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                setIsEditing(false);
+            } else {
+                console.error('Profile update failed', updated?.error || updated?.message);
+            }
+        } catch (err) {
+            console.error('Profile update error', err);
+        }
+    };
+
+    const handlePhotoUpload = async (photoData: string) => {
+        if (!user) return;
+
+        const normalizedPhoto = normalizeProfilePhoto(photoData);
+        setIsUploadingPhoto(true);
+        setHasError(null);
+        setSelectedPhoto(normalizedPhoto);
+        setPhotoLoadError(false);
+
+        try {
+            const updated = await updateProfile(
+                user.user_id,
+                editName || user.name || "",
+                editEmail || user.email || "",
+                normalizedPhoto
+            );
+
+            if (updated?.status === false) {
+                throw new Error(updated?.error || updated?.message || 'Failed to upload profile photo');
+            }
+
+            const updatedUser = {
+                ...user,
+                name: editName || user.name,
+                email: editEmail || user.email,
+                profile_photo: normalizedPhoto,
+            };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        } catch (err: any) {
+            console.error('Profile photo upload error', err);
+            setHasError(err?.message || 'Unable to upload profile photo to database.');
+        } finally {
+            setIsUploadingPhoto(false);
+        }
+    };
+
+    const behavioralData = [
+      { subject: 'Finance', value: 80, fullMark: 100 },
+      { subject: 'Career', value: 95, fullMark: 100 },
+      { subject: 'Education', value: 70, fullMark: 100 },
+      { subject: 'Risk Check', value: 65, fullMark: 100 },
+      { subject: 'Growth', value: 88, fullMark: 100 }
+    ];
+
+  if (isLoading) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="max-w-[1400px] mx-auto px-6 pb-16 pt-6">Loading profile... Please wait.</div>
+      </WebLayout>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="max-w-[1400px] mx-auto px-6 pb-16 pt-6 text-red-600">{hasError}</div>
+      </WebLayout>
+    );
+  }
 
   return (
     <WebLayout maxWidth="full">
-      <div className="max-w-[1600px] mx-auto px-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Profile Info */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Profile Card */}
-          <WebCard className="text-center">
-            <div className="relative inline-block mb-4">
-              <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto">
-                <User className="w-16 h-16 text-white" />
+      <div className="min-h-screen bg-slate-50">
+        <div className="max-w-[1200px] mx-auto px-4 py-8">
+          <div className="mb-6">
+            <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">
+              <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full">User Identity</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Profile Overview</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage personal details, avatar, and analytics in one place.</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          {/* Left Column - Profile Info */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {/* Profile Card */}
+            <div className="mx-auto w-full max-w-md rounded-3xl bg-white border border-gray-200 shadow-lg p-6">
+              <div className="relative mx-auto mb-4 flex items-center justify-center">
+                <div className="relative w-36 h-36 rounded-full bg-blue-500 shadow-2xl flex items-center justify-center">
+                  {(selectedPhoto || user?.profile_photo) && !photoLoadError ? (
+                    <img
+                      src={normalizeProfilePhoto(selectedPhoto || user?.profile_photo)}
+                      alt="Profile"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white"
+                      onError={() => {
+                        console.warn("Profile photo failed to load");
+                        setPhotoLoadError(true);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center">
+                      <User className="w-14 h-14 text-white" />
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute right-0 bottom-0 -translate-x-2 translate-y-2 w-10 h-10 bg-white rounded-full border-2 border-blue-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                  >
+                    <Upload className="w-5 h-5 text-blue-500" />
+                  </button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === 'string') {
+                          handlePhotoUpload(reader.result);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    className="hidden"
+                  />
+                </div>
               </div>
-              <button className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border-2 border-gray-100">
-                <Edit className="w-5 h-5 text-gray-700" />
-              </button>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">{user.username || user.name}</h2>
-            <p className="text-gray-600 mb-4">{user.email}</p>
-            
-            <div className="flex items-center justify-center space-x-2 mb-6">
-              <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                Pro Member
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">{user?.name || 'Your Name'}</h2>
+                <p className="text-sm text-gray-600 mb-1">{user?.email || 'user@example.com'}</p>
+                <p className="text-xs text-gray-500 mb-4">Joined {joinDate}</p>
+                {isUploadingPhoto && (
+                  <p className="text-xs text-blue-600 mb-4">Uploading photo to database...</p>
+                )}
               </div>
-              <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                Verified
+
+              <div className="space-y-3">
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Your Name"
+                    />
+                    <input
+                      type="email"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="Your Email"
+                    />
+                    <button
+                      onClick={handleSaveProfile}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditName(user?.name || '');
+                        setEditEmail(user?.email || '');
+                      }}
+                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
             </div>
 
-            <button
-              onClick={() => navigate('/settings')}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              Edit Profile
-            </button>
-          </WebCard>
-
-          {/* Quick Stats */}
-          <WebCard>
-            <h3 className="font-bold text-gray-800 mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <StatItem icon={<Sparkles className="w-5 h-5 text-blue-600" />} label="Future Score" value={`${averageScore}/100`} />
-              <StatItem icon={<Target className="w-5 h-5 text-green-600" />} label="Active Goals" value="0" />
-              <StatItem icon={<TrendingUp className="w-5 h-5 text-purple-600" />} label="Simulations" value={history.length.toString()} />
-              <StatItem icon={<Award className="w-5 h-5 text-orange-600" />} label="Achievements" value="3" />
-            </div>
-          </WebCard>
-
-          {/* Personal Info */}
-          <WebCard>
-            <h3 className="font-bold text-gray-800 mb-4">Personal Information</h3>
-            <div className="space-y-3">
-              <InfoItem icon={<Mail className="w-4 h-4 text-gray-500" />} label="Email" value={user.email} />
-              <InfoItem icon={<Calendar className="w-4 h-4 text-gray-500" />} label="Joined" value="Feb 2026" />
-              <InfoItem icon={<MapPin className="w-4 h-4 text-gray-500" />} label="Location" value="India" />
-            </div>
-          </WebCard>
-        </div>
-
-        {/* Right Column - Activity & Options */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Overview Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <WebCard className="text-center bg-blue-50/50">
-              <p className="text-3xl font-bold text-blue-600 mb-1">{averageScore}</p>
-              <p className="text-sm text-gray-600">Future Score</p>
-            </WebCard>
-            <WebCard className="text-center bg-green-50/50">
-              <p className="text-3xl font-bold text-green-600 mb-1">0</p>
-              <p className="text-sm text-gray-600">Active Goals</p>
-            </WebCard>
-            <WebCard className="text-center bg-purple-50/50">
-              <p className="text-3xl font-bold text-purple-600 mb-1">{history.length}</p>
-              <p className="text-sm text-gray-600">Simulations</p>
-            </WebCard>
-            <WebCard className="text-center bg-orange-50/50">
-              <p className="text-3xl font-bold text-orange-600 mb-1">0</p>
-              <p className="text-sm text-gray-600">AI Insights</p>
+            {/* Stats Cards */}
+            <WebCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+              <div className="space-y-4">
+                <StatItem icon={<Target className="w-5 h-5 text-blue-600" />} label="Predictions Made" value={history.length.toString()} />
+                <StatItem icon={<TrendingUp className="w-5 h-5 text-green-600" />} label="Success Rate" value={`${history.length > 0 ? Math.round(history.reduce((acc, h) => acc + (parseFloat(h.success_probability) || 0), 0) / history.length) : 0}%`} />
+                <StatItem icon={<Sparkles className="w-5 h-5 text-purple-600" />} label="Active Goals" value="3" />
+              </div>
             </WebCard>
           </div>
 
-          {/* Recent Activity */}
-          <WebCard>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Recent Activity</h3>
-              <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">View All</button>
-            </div>
-            <div className="space-y-4">
-              {history.length > 0 ? history.slice(0, 3).map((h, i) => (
-                <ActivityItem 
-                    key={i}
-                    icon={<Sparkles className="w-5 h-5 text-blue-600" />}
-                    title={`Completed ${h.decision_input || 'Simulation'}`}
-                    description={`Success rate: ${Math.round(h.success_probability)}%`}
-                    time={new Date(h.created_at).toLocaleDateString()}
-                />
-              )) : (
-                  <p className="text-gray-500 italic text-center py-4">No recent activity found.</p>
-              )}
-            </div>
-          </WebCard>
+          {/* Right Column - Activity & Analytics */}
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            {/* Analytics Overview */}
+            <WebCard className="text-center bg-gradient-to-br from-blue-50 to-indigo-50">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Behavioral Analytics</h3>
+              <p className="text-gray-600 mb-6">Your decision-making patterns and success metrics</p>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-xl shadow-sm">
+                  <div className="text-2xl font-bold text-blue-600">85%</div>
+                  <div className="text-sm text-gray-600">Risk Assessment</div>
+                </div>
+                <div className="bg-white p-4 rounded-xl shadow-sm">
+                  <div className="text-2xl font-bold text-green-600">92%</div>
+                  <div className="text-sm text-gray-600">Goal Achievement</div>
+                </div>
+              </div>
+              <div className="space-y-5 mt-auto">
+                {behavioralData.map((item, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-gray-700">{item.subject}</span>
+                      <span className="text-sm font-black text-indigo-600">{item.value}%</span>
+                    </div>
+                    <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                      <div 
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-1000 ease-out shadow-sm"
+                        style={{ width: `${item.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </WebCard>
 
-          {/* Achievements */}
-          <WebCard>
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Achievements</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Achievement emoji="🎯" title="Goal Master" subtitle="Set 10+ goals" />
-              <Achievement emoji="🧠" title="AI Explorer" subtitle="50 simulations" />
-              <Achievement emoji="💰" title="Finance Pro" subtitle="Smart investor" />
-              <Achievement emoji="🔥" title="Streak" subtitle="7 days active" />
-            </div>
-          </WebCard>
+            {/* Recent Activity */}
+            <WebCard className="flex flex-col h-full">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                <button 
+                  className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center group"
+                >
+                  View All <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+              <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                {history.length > 0 ? history.slice(0, 4).map((h, i) => (
+                  <ActivityItem 
+                      key={i}
+                      icon={<Sparkles className="w-5 h-5 text-blue-600" />}
+                      title={`Completed ${h.decision_input || 'Simulation'}`}
+                      description={`Success rate: ${Math.round(h.success_probability)}%`}
+                      time={new Date(h.created_at).toLocaleDateString()}
+                  />
+                )) : (
+                    <div className="h-full flex flex-col items-center justify-center opacity-50 space-y-3 pb-8">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 italic text-center">No recent activity found.</p>
+                    </div>
+                )}
+              </div>
+            </WebCard>
+          </div>
         </div>
       </div>
-      </div>
+    </div>
     </WebLayout>
   );
 }
@@ -174,18 +371,6 @@ function StatItem({ icon, label, value }: { icon: React.ReactNode; label: string
         <span className="text-sm text-gray-600">{label}</span>
       </div>
       <span className="font-semibold text-gray-800">{value}</span>
-    </div>
-  );
-}
-
-function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-center space-x-3 text-sm">
-      {icon}
-      <div className="flex-1">
-        <p className="text-gray-500">{label}</p>
-        <p className="font-medium text-gray-800">{value}</p>
-      </div>
     </div>
   );
 }
@@ -206,16 +391,6 @@ function ActivityItem({ icon, title, description, time }: {
         <p className="text-sm text-gray-600">{description}</p>
         <p className="text-xs text-gray-500 mt-1">{time}</p>
       </div>
-    </div>
-  );
-}
-
-function Achievement({ emoji, title, subtitle }: { emoji: string; title: string; subtitle: string }) {
-  return (
-    <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
-      <div className="text-3xl mb-2">{emoji}</div>
-      <p className="font-semibold text-gray-800 text-sm">{title}</p>
-      <p className="text-xs text-gray-600">{subtitle}</p>
     </div>
   );
 }

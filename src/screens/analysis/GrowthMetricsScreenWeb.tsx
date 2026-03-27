@@ -1,29 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { 
   TrendingUp, Award, Target, Sparkles, Calendar, Download,
-  ArrowUpRight, ArrowDownRight, TrendingDown, Trophy, Star,
-  Zap, Clock, CheckCircle2, Activity
+  ArrowUpRight, ArrowDownRight, TrendingDown,
+  Zap, Clock, Activity,
+  Trophy, Star,
+  Loader2
 } from 'lucide-react';
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   RadialBarChart, RadialBar, PolarAngleAxis, ComposedChart
 } from 'recharts';
+import { getPredictionsHistory } from '../../api/prediction';
 
 type Period = 'week' | 'month' | 'quarter' | 'year';
 
 export default function GrowthMetricsScreenWeb() {
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('month');
+  const [history, setHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        navigate('/login');
+        return;
+      }
+      const user = JSON.parse(userStr);
+      try {
+        const data = await getPredictionsHistory(user.user_id);
+        setHistory(data);
+      } catch (error) {
+        console.error('Failed to fetch history:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <WebLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        </div>
+      </WebLayout>
+    );
+  }
+
+  const getStat = (p: any, key: string) => {
+    if (!p) return 0;
+    if (p[key] !== undefined && p[key] !== null && p[key] !== 0) {
+      return parseFloat(p[key]);
+    }
+    if (p.forecast_result) {
+      try {
+        const res = JSON.parse(p.forecast_result);
+        if (res[key]) return parseFloat(res[key]);
+      } catch (e) {}
+    }
+    return 0;
+  };
+
+  const calculateAvg = (key: string) => {
+    if (!history.length) return 0;
+    const total = history.reduce((acc, curr) => acc + getStat(curr, key), 0);
+    return Math.round(total / history.length);
+  };
+
+  const avgSuccess = calculateAvg('success_probability');
+  const avgLifeSat = calculateAvg('life_satisfaction');
+  const avgImpact = calculateAvg('financial_impact');
 
   const metrics = [
     {
       label: 'Decision Quality',
-      current: 87,
-      previous: 72,
-      change: '+15',
+      current: avgSuccess > 0 ? Math.min(avgSuccess + 5, 100) : 75,
+      previous: avgSuccess > 0 ? Math.max(avgSuccess - 3, 0) : 72,
+      change: '+5',
       trend: 'up',
       icon: Target,
       color: 'blue',
@@ -32,8 +91,8 @@ export default function GrowthMetricsScreenWeb() {
     },
     {
       label: 'Success Rate',
-      current: 82,
-      previous: 76,
+      current: avgSuccess > 0 ? avgSuccess : 80,
+      previous: avgSuccess > 0 ? Math.max(avgSuccess - 6, 0) : 76,
       change: '+6',
       trend: 'up',
       icon: TrendingUp,
@@ -43,9 +102,9 @@ export default function GrowthMetricsScreenWeb() {
     },
     {
       label: 'Goal Alignment',
-      current: 91,
-      previous: 85,
-      change: '+6',
+      current: avgLifeSat > 0 ? avgLifeSat : 85,
+      previous: avgLifeSat > 0 ? Math.max(avgLifeSat - 4, 0) : 81,
+      change: '+4',
       trend: 'up',
       icon: Sparkles,
       color: 'purple',
@@ -53,49 +112,34 @@ export default function GrowthMetricsScreenWeb() {
       description: 'How well decisions align with goals'
     },
     {
-      label: 'Risk Management',
-      current: 78,
-      previous: 65,
-      change: '+13',
+      label: 'Financial Impact',
+      current: avgImpact > 0 ? avgImpact : 78,
+      previous: avgImpact > 0 ? Math.max(avgImpact - 8, 0) : 70,
+      change: '+8',
       trend: 'up',
       icon: Award,
       color: 'orange',
       target: 85,
-      description: 'Effectiveness in managing risks'
-    },
-    {
-      label: 'Decision Speed',
-      current: 85,
-      previous: 79,
-      change: '+6',
-      trend: 'up',
-      icon: Zap,
-      color: 'yellow',
-      target: 90,
-      description: 'Time taken to make decisions'
-    },
-    {
-      label: 'Consistency',
-      current: 88,
-      previous: 82,
-      change: '+6',
-      trend: 'up',
-      icon: Activity,
-      color: 'pink',
-      target: 92,
-      description: 'Regularity in decision patterns'
+      description: 'Effectiveness in managing finances'
     }
   ];
 
-  // Monthly progress data
-  const progressData = [
-    { month: 'Oct', quality: 72, success: 76, alignment: 85, risk: 65, speed: 79, consistency: 82 },
-    { month: 'Nov', quality: 75, success: 78, alignment: 86, risk: 68, speed: 80, consistency: 83 },
-    { month: 'Dec', quality: 78, success: 79, alignment: 87, risk: 70, speed: 81, consistency: 84 },
-    { month: 'Jan', quality: 82, success: 80, alignment: 89, risk: 73, speed: 82, consistency: 85 },
-    { month: 'Feb', quality: 85, success: 81, alignment: 90, risk: 75, speed: 84, consistency: 87 },
-    { month: 'Mar', quality: 87, success: 82, alignment: 91, risk: 78, speed: 85, consistency: 88 }
-  ];
+  // Map historical data for chart
+  const progressData = history.length > 0
+    ? history.slice().reverse().map(h => {
+        const date = new Date(h.created_at);
+        return {
+          month: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          quality: Math.round(getStat(h, 'success_probability') * 0.9 + 10),
+          success: Math.round(getStat(h, 'success_probability')),
+          alignment: Math.round(getStat(h, 'life_satisfaction'))
+        };
+      })
+    : [
+        { month: 'Oct', quality: 72, success: 76, alignment: 85 },
+        { month: 'Nov', quality: 75, success: 78, alignment: 86 },
+        { month: 'Dec', quality: 78, success: 79, alignment: 87 }
+      ];
 
   // Radial chart data for current metrics
   const radialData = metrics.map(m => ({
@@ -104,87 +148,20 @@ export default function GrowthMetricsScreenWeb() {
     fill: `var(--color-${m.color})`
   }));
 
-  const achievements = [
-    {
-      icon: Trophy,
-      color: 'yellow',
-      title: 'Decision Master',
-      description: 'Made 15 successful predictions this month',
-      date: 'Mar 1, 2026',
-      points: 150,
-      rarity: 'gold'
-    },
-    {
-      icon: Zap,
-      color: 'blue',
-      title: 'Speed Demon',
-      description: 'Improved decision speed by 25%',
-      date: 'Feb 28, 2026',
-      points: 100,
-      rarity: 'silver'
-    },
-    {
-      icon: Target,
-      color: 'purple',
-      title: 'Goal Achiever',
-      description: 'Maintained 90%+ goal alignment for 3 months',
-      date: 'Feb 15, 2026',
-      points: 200,
-      rarity: 'gold'
-    },
-    {
-      icon: Star,
-      color: 'green',
-      title: 'Consistency Champion',
-      description: 'Daily simulations for 30 consecutive days',
-      date: 'Feb 10, 2026',
-      points: 120,
-      rarity: 'silver'
-    },
-    {
-      icon: Award,
-      color: 'orange',
-      title: 'Risk Manager',
-      description: 'Successfully navigated 10 high-risk scenarios',
-      date: 'Jan 25, 2026',
-      points: 80,
-      rarity: 'bronze'
-    },
-    {
-      icon: TrendingUp,
-      color: 'pink',
-      title: 'Growth Guru',
-      description: '+10% improvement across all categories',
-      date: 'Jan 15, 2026',
-      points: 180,
-      rarity: 'gold'
-    }
-  ];
-
-  const milestones = [
-    { title: '100 Simulations', current: 68, target: 100, percentage: 68 },
-    { title: '50 Goals Completed', current: 42, target: 50, percentage: 84 },
-    { title: '90% Success Rate', current: 82, target: 90, percentage: 91 },
-    { title: '30 Day Streak', current: 30, target: 30, percentage: 100 }
-  ];
-
-  const colorMap: Record<string, string> = {
-    blue: '#3b82f6',
-    green: '#10b981',
-    purple: '#8b5cf6',
-    orange: '#f59e0b',
-    yellow: '#eab308',
-    pink: '#ec4899'
-  };
-
-  const getRarityBadge = (rarity: string) => {
-    const styles = {
-      gold: 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white',
-      silver: 'bg-gradient-to-r from-gray-300 to-gray-500 text-white',
-      bronze: 'bg-gradient-to-r from-orange-400 to-orange-600 text-white'
-    };
-    return styles[rarity as keyof typeof styles] || styles.bronze;
-  };
+    if (!history || history.length === 0) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center p-8 bg-white border border-dashed border-gray-200 rounded-3xl shadow-xl max-w-md mx-auto">
+             <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4 animate-pulse" />
+             <h2 className="text-2xl font-black text-gray-800 mb-2">No Growth Metrics</h2>
+             <p className="text-sm text-gray-500 mb-6 font-medium">Run your first simulation to accurately evaluate live alignment setups.</p>
+             <button onClick={() => navigate('/simulation-intro')} className="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-green-500/25 transition-all">Start Simulation</button>
+          </div>
+        </div>
+      </WebLayout>
+    );
+  }
 
   return (
     <WebLayout maxWidth="full">
@@ -200,23 +177,6 @@ export default function GrowthMetricsScreenWeb() {
                 <h1 className="text-3xl font-bold text-gray-800">Growth Metrics</h1>
                 <p className="text-gray-600">Track your personal development journey</p>
               </div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-xl p-1">
-              {(['week', 'month', 'quarter', 'year'] as Period[]).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setSelectedPeriod(period)}
-                  className={`px-4 py-2 rounded-lg transition-all text-sm font-medium capitalize ${
-                    selectedPeriod === period
-                      ? 'bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {period}
-                </button>
-              ))}
             </div>
           </div>
         </div>
@@ -246,7 +206,7 @@ export default function GrowthMetricsScreenWeb() {
                 <div className="relative">
                   <div className="w-40 h-40 rounded-full border-8 border-white/30 flex items-center justify-center">
                     <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-xl flex flex-col items-center justify-center">
-                      <div className="text-4xl font-bold">84</div>
+                      <div className="text-4xl font-bold">{avgSuccess > 0 ? avgSuccess : 84}</div>
                       <div className="text-sm text-white/80">Score</div>
                     </div>
                   </div>
@@ -334,7 +294,7 @@ export default function GrowthMetricsScreenWeb() {
         </div>
 
         {/* Detailed Metrics Grid */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {metrics.map((metric, index) => (
             <div key={index} className="bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 hover:shadow-lg transition-all">
               <div className="flex items-start justify-between mb-4">
@@ -373,78 +333,6 @@ export default function GrowthMetricsScreenWeb() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Milestones Progress */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-6">Milestones</h3>
-          <div className="grid grid-cols-4 gap-4">
-            {milestones.map((milestone, index) => (
-              <div key={index} className="relative">
-                <div className="text-center mb-3">
-                  <p className="text-sm font-medium text-gray-700 mb-1">{milestone.title}</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {milestone.current}/{milestone.target}
-                  </p>
-                </div>
-                <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-500 to-blue-600 transition-all duration-500"
-                    style={{ width: `${milestone.percentage}%` }}
-                  />
-                </div>
-                <p className="text-center text-xs text-gray-600 mt-2">{milestone.percentage}% Complete</p>
-                {milestone.percentage === 100 && (
-                  <div className="absolute -top-2 -right-2">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                      <CheckCircle2 className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Achievements */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-1">Recent Achievements</h3>
-              <p className="text-sm text-gray-600">Unlock badges by reaching milestones</p>
-            </div>
-            <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-400 to-yellow-600 px-4 py-2 rounded-xl text-white">
-              <Trophy className="w-5 h-5" />
-              <span className="font-bold">Total Points: 830</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            {achievements.map((achievement, index) => (
-              <div key={index} className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-all">
-                <div className="flex items-start space-x-3 mb-3">
-                  <div className={`w-12 h-12 bg-${achievement.color}-100 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                    <achievement.icon className={`w-6 h-6 text-${achievement.color}-600`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="font-semibold text-gray-800">{achievement.title}</h4>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getRarityBadge(achievement.rarity)}`}>
-                        {achievement.rarity.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{achievement.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{achievement.date}</span>
-                      <span className="flex items-center space-x-1 text-yellow-600 font-bold text-sm">
-                        <Star className="w-4 h-4" />
-                        <span>{achievement.points}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* AI Insights */}

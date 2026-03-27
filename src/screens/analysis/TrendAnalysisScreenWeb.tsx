@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getPredictionsHistory } from '../../api/prediction';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { 
@@ -14,6 +15,22 @@ export default function TrendAnalysisScreenWeb() {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [chartType, setChartType] = useState<ChartType>('area');
+
+  const [history, setHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) { navigate('/login'); return; }
+      const user = JSON.parse(userStr);
+      try {
+         const data = await getPredictionsHistory(user.user_id);
+         setHistory(data);
+      } catch (e) {} finally { setIsLoading(false); }
+    };
+    fetchHistory();
+  }, [navigate]);
 
   // Monthly trend data
   const monthlyData = [
@@ -231,6 +248,31 @@ export default function TrendAnalysisScreenWeb() {
         );
     }
   };
+
+    if (isLoading) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full" />
+        </div>
+      </WebLayout>
+    );
+  }
+
+  if (!history || history.length === 0) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center p-8 bg-white border border-dashed border-gray-200 rounded-3xl shadow-xl max-w-md mx-auto">
+             <LineChart className="w-16 h-16 text-gray-300 mx-auto mb-4 animate-pulse" />
+             <h2 className="text-2xl font-black text-gray-800 mb-2">No Trend Analysis</h2>
+             <p className="text-sm text-gray-500 mb-6 font-medium">Run your first simulation to generate trending decision trajectories properly.</p>
+             <button onClick={() => navigate('/simulation-intro')} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-blue-500/25 transition-all">Start Simulation</button>
+          </div>
+        </div>
+      </WebLayout>
+    );
+  }
 
   return (
     <WebLayout maxWidth="full">

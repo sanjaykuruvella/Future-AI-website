@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { Briefcase, ArrowRight, Sparkles } from 'lucide-react';
+import { Briefcase, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 
 export default function CareerDecisionScreenWeb() {
   const navigate = useNavigate();
@@ -28,7 +28,10 @@ export default function CareerDecisionScreenWeb() {
     capital_gain: '0',
     capital_loss: '0',
     hours_per_week: '40',
-    country: 'United-States'
+    country: 'India',
+    effort: 50,
+    risk: 50,
+    investment: 50
   });
 
   const careerTypes = [
@@ -58,7 +61,10 @@ export default function CareerDecisionScreenWeb() {
             Capital_Gain: parseInt(formData.capital_gain),
             Capital_Loss: parseInt(formData.capital_loss),
             Hours_Per_Week: parseInt(formData.hours_per_week),
-            Country: formData.country
+            Country: formData.country,
+            effort: formData.effort,
+            risk: formData.risk,
+            investment: formData.investment
         }
     }));
     navigate('/simulation/processing');
@@ -73,7 +79,14 @@ export default function CareerDecisionScreenWeb() {
           <span className="text-sm font-semibold text-blue-600">Career Decision • Step 2 of 5</span>
         </div>
         <div className="flex items-center space-x-4 mb-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="w-10 h-10 bg-white rounded-xl flex items-center justify-center hover:bg-gray-100 transition-all shadow-sm border border-gray-100"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
+          </button>
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <Briefcase className="w-7 h-7 text-white" />
           </div>
           <div>
@@ -326,6 +339,32 @@ export default function CareerDecisionScreenWeb() {
                 <option value="Married-AF-spouse">Married-AF-spouse</option>
                 <option value="Widowed">Widowed</option>
               </select>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-gray-100 mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <div className="flex justify-between mb-1 items-baseline">
+                <label className="text-xs font-bold text-gray-500">Effort Commitment</label>
+                <span className="text-xs font-black text-blue-600">{formData.effort}%</span>
+              </div>
+              <input type="range" min="10" max="100" value={formData.effort} onChange={(e) => setFormData({ ...formData, effort: Number(e.target.value) })} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-1 items-baseline">
+                <label className="text-xs font-bold text-gray-500">Risk Factor (Exposure)</label>
+                <span className="text-xs font-black text-rose-600">{formData.risk}%</span>
+              </div>
+              <input type="range" min="10" max="100" value={formData.risk} onChange={(e) => setFormData({ ...formData, risk: Number(e.target.value) })} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-rose-600" />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-1 items-baseline">
+                <label className="text-xs font-bold text-gray-500">Investment Target</label>
+                <span className="text-xs font-black text-emerald-600">{formData.investment}%</span>
+              </div>
+              <input type="range" min="10" max="100" value={formData.investment} onChange={(e) => setFormData({ ...formData, investment: Number(e.target.value) })} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
             </div>
           </div>
         </WebCard>

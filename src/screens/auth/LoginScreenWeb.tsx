@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { loginUser } from '../../api/auth';
+import { normalizeProfilePhoto } from '../../utils/profilePhoto';
 
 export default function LoginScreenWeb() {
   const navigate = useNavigate();
@@ -20,7 +21,19 @@ export default function LoginScreenWeb() {
     try {
       const response = await loginUser(email, password);
       if (response.status) {
-        localStorage.setItem('user', JSON.stringify(response.user));
+        const previousUserStr = localStorage.getItem('user');
+        const previousUser = previousUserStr ? JSON.parse(previousUserStr) : null;
+        const previousPhoto =
+          previousUser?.email === response.user?.email
+            ? normalizeProfilePhoto(previousUser?.profile_photo)
+            : '';
+        const loginPhoto = normalizeProfilePhoto(response.user?.profile_photo);
+        const mergedUser = {
+          ...previousUser,
+          ...response.user,
+          profile_photo: loginPhoto || previousPhoto || '',
+        };
+        localStorage.setItem('user', JSON.stringify(mergedUser));
         navigate('/home');
       } else {
         setError(response.message || 'Login failed');
@@ -108,7 +121,7 @@ export default function LoginScreenWeb() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
             {/* Email Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -123,6 +136,7 @@ export default function LoginScreenWeb() {
                   className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="you@example.com"
                   required
+                  autoComplete="new-password"
                 />
               </div>
             </div>
@@ -141,6 +155,7 @@ export default function LoginScreenWeb() {
                   className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="Enter your password"
                   required
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"

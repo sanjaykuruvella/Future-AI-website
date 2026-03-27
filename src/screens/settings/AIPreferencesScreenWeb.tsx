@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
 import { Brain, Zap, Target, TrendingUp, MessageSquare, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AIPreferencesScreenWeb() {
   const navigate = useNavigate();
@@ -16,6 +17,17 @@ export default function AIPreferencesScreenWeb() {
     ethicalFilters: true,
     explainPredictions: true,
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('aiPreferences');
+    if (saved) {
+      try {
+        setSettings(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse AI preferences from local storage', e);
+      }
+    }
+  }, []);
 
   return (
     <WebLayout maxWidth="xl">
@@ -269,7 +281,11 @@ export default function AIPreferencesScreenWeb() {
             Cancel
           </button>
           <button
-            onClick={() => navigate('/settings')}
+            onClick={() => {
+              localStorage.setItem('aiPreferences', JSON.stringify(settings));
+              toast.success('AI Preferences saved successfully');
+              navigate('/settings');
+            }}
             className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-xl transition-all font-semibold"
           >
             Save Preferences

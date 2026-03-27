@@ -1,15 +1,34 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Sparkles, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Sparkles, Mail, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
+import { forgotPasswordEmail } from '../../api/auth';
 
 export default function ForgotPasswordScreenWeb() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    setIsLoading(false);
+    setError('');
+
+    try {
+      setIsLoading(true);
+      const response = await forgotPasswordEmail(email);
+      if (response.message) {
+        setIsSubmitted(true);
+      } else {
+        setError('Email not found or error occurred.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -23,7 +42,7 @@ export default function ForgotPasswordScreenWeb() {
             
             <h2 className="text-2xl font-bold text-gray-900 mb-3">Check Your Email</h2>
             <p className="text-gray-600 mb-2">
-              We've sent a password reset link to:
+              We've sent your account recovery info to:
             </p>
             <p className="font-semibold text-gray-900 mb-6">{email}</p>
             
@@ -139,12 +158,26 @@ export default function ForgotPasswordScreenWeb() {
               </p>
             </div>
 
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+                {error}
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02] transition-all"
+              disabled={isLoading}
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
-              Send Reset Link
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Sending reset link...</span>
+                </>
+              ) : (
+                <span>Send Reset Link</span>
+              )}
             </button>
 
             {/* Back to Login Link */}

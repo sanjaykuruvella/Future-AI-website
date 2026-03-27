@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
+import { apiRequest } from '../../api/config';
 import { WebCard } from '../../components/WebCard';
+import { getPredictionsHistory } from '../../api/prediction';
 import {
   Sparkles, TrendingUp, Target, MessageCircle, BarChart3,
   History, AlertTriangle, Calendar, Zap, Brain,
@@ -15,7 +18,40 @@ export default function HomeDashboardWeb() {
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : { name: 'User' };
 
+  const [stats, setStats] = useState({
+    future_score: 0,
+    active_goals: 0,
+    simulation_count: 0,
+    ai_insights: 0,
+    trend: '+0 this week'
+  });
+  const [history, setHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+         const data = await apiRequest<any>(`/home_data/${user.user_id}`);
+         if (data && !data.error) {
+             setStats(data);
+         }
+         const historyData = await getPredictionsHistory(user.user_id);
+         setHistory(Array.isArray(historyData) ? historyData : []);
+      } catch (err) {
+         console.error(err);
+      } finally {
+         setIsLoading(false);
+      }
+    };
+    if (user && user.user_id) {
+         fetchStats();
+    }
+  }, [user.user_id]);
+
   // Mock data for mini-charts
+  const activeGoals = history.length > 0 ? history.length : Math.max(stats.active_goals ?? 0, stats.simulation_count ?? 0);
+  const pathCompletion = activeGoals > 0 ? Math.round((stats.future_score ?? 0) * 1) : 0;
+
   const scoreData = [
     { value: 65 }, { value: 72 }, { value: 68 }, { value: 78 }, { value: 82 }, { value: 85 }, { value: 87 }
   ];
@@ -23,6 +59,19 @@ export default function HomeDashboardWeb() {
   const simulationData = [
     { value: 4 }, { value: 6 }, { value: 3 }, { value: 8 }, { value: 5 }, { value: 7 }, { value: 6 }
   ];
+
+  if (isLoading) {
+    return (
+      <WebLayout maxWidth="full">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center">
+            <Sparkles className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 font-bold">Loading your insights...</p>
+          </div>
+        </div>
+      </WebLayout>
+    );
+  }
 
   return (
     <WebLayout maxWidth="full">
@@ -64,7 +113,7 @@ export default function HomeDashboardWeb() {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">Future Score</p>
                   <div className="flex items-baseline space-x-2">
-                    <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">87</span>
+                    <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{stats.future_score}</span>
                     <span className="text-sm text-gray-400 font-medium">/ 100</span>
                   </div>
                 </div>
@@ -89,19 +138,19 @@ export default function HomeDashboardWeb() {
 
               <div className="flex items-center space-x-1 text-sm text-green-600 mt-2 font-medium">
                 <TrendingUp className="w-4 h-4" />
-                <span>+5.2% trend improvement</span>
+                <span>{stats.trend}</span>
               </div>
             </div>
           </WebCard>
 
-          <WebCard className="bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-100/50">
+          <WebCard className="bg-gradient-to-br from-pink-500 to-fuchsia-500 border-transparent text-white">
             <div className="flex flex-col h-full justify-between">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Active Goals</p>
-                  <span className="text-4xl font-bold text-emerald-600">12</span>
+                  <p className="text-sm font-semibold text-pink-100 mb-1">Active Goals</p>
+                  <span className="text-4xl font-bold text-white">{activeGoals}</span>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <div className="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-800/40">
                   <Target className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -109,14 +158,16 @@ export default function HomeDashboardWeb() {
               <div className="space-y-3 mt-2">
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500 font-medium">Path Completion</span>
-                    <span className="text-emerald-600 font-bold">75%</span>
+                    <span className="text-pink-100 font-medium">Path Completion</span>
+                    <span className="text-white font-bold">{pathCompletion}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-emerald-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '75%' }} />
+                  <div className="w-full h-1.5 bg-pink-900/40 rounded-full overflow-hidden">
+                    <div className="h-full bg-white rounded-full" style={{ width: `${pathCompletion}%` }} />
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">8 goals on track • 4 need attention</p>
+                <p className="text-xs text-pink-100">
+                  {activeGoals === 0 ? "No active goals yet" : `${activeGoals} goals tracking your path`}
+                </p>
               </div>
             </div>
           </WebCard>
@@ -127,7 +178,7 @@ export default function HomeDashboardWeb() {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">Simulations</p>
                   <div className="flex items-baseline space-x-2">
-                    <span className="text-4xl font-bold text-orange-600">48</span>
+                    <span className="text-4xl font-bold text-orange-600">{stats.simulation_count}</span>
                     <span className="text-sm text-gray-400 font-medium">this mo.</span>
                   </div>
                 </div>
@@ -153,7 +204,7 @@ export default function HomeDashboardWeb() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">AI Insights</p>
-                  <span className="text-4xl font-bold text-purple-600">156</span>
+                  <span className="text-4xl font-bold text-purple-600">{stats.ai_insights}</span>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
                   <Brain className="w-6 h-6 text-white" />
@@ -166,7 +217,7 @@ export default function HomeDashboardWeb() {
                 <span className="px-2 py-1 bg-pink-100 text-pink-600 rounded-md text-[10px] font-bold">LIFESTYLE</span>
               </div>
 
-              <p className="text-xs text-gray-500 mt-2">Generated from 48 simulations</p>
+              <p className="text-xs text-gray-500 mt-2">Generated from {stats.simulation_count} simulations</p>
             </div>
           </WebCard>
         </div>
@@ -252,7 +303,7 @@ export default function HomeDashboardWeb() {
                     <History className="w-6 h-6 text-white" />
                   </div>
                   <p className="font-medium text-gray-800">Trends</p>
-                  <p className="text-xs text-gray-500 mt-1">48 predictions</p>
+                  <p className="text-xs text-gray-500 mt-1">{stats.simulation_count} predictions</p>
                 </WebCard>
 
 
@@ -280,7 +331,17 @@ export default function HomeDashboardWeb() {
               </div>
 
               <div className="space-y-4">
-                {[
+                {stats.simulation_count === 0 ? (
+                  <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    <Zap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="font-bold text-gray-800 mb-1">No Simulations Yet</p>
+                    <p className="text-xs text-gray-500 mb-4">Start a simulation to see predictions and insights.</p>
+                    <button onClick={() => navigate('/simulation-intro')} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-xs shadow-md">
+                      Start First Simulation
+                    </button>
+                  </div>
+                ) : (
+                [
                   {
                     title: 'Career Change to Tech Industry',
                     prob: '87%',
@@ -297,14 +358,6 @@ export default function HomeDashboardWeb() {
                     color: 'emerald',
                     icon: Activity
                   },
-                  {
-                    title: 'Starting a Side Business',
-                    prob: 'MED RISK',
-                    time: '2 days ago',
-                    impact: 'MONITOR',
-                    color: 'orange',
-                    icon: Target
-                  }
                 ].map((sim, i) => (
                   <WebCard key={i} hover onClick={() => navigate('/analytics')} className="p-4 border-gray-100 hover:border-blue-200 group">
                     <div className="flex items-center justify-between">
@@ -333,7 +386,8 @@ export default function HomeDashboardWeb() {
                       </div>
                     </div>
                   </WebCard>
-                ))}
+                ))
+                )}
               </div>
             </div>
           </div>
@@ -355,7 +409,9 @@ export default function HomeDashboardWeb() {
                 </div>
                 <div className="bg-purple-50/50 rounded-xl p-4 mb-5 border border-purple-100">
                   <p className="text-sm text-gray-700 leading-relaxed italic">
-                    "Your current focus on <span className="text-purple-700 font-bold">financial upskilling</span> has reduced your long-term risk profile by 12% this month. Keep going."
+                    {stats.simulation_count === 0 
+                      ? "Welcome to FutureVision AI! Run your first simulation to generate actionable insights for your balance path."
+                      : `"Your focus on personal data simulations and strategy updates is building momentum. Keep exploring scenarios for optimal results."`}
                   </p>
                 </div>
                 <button
@@ -373,9 +429,9 @@ export default function HomeDashboardWeb() {
               <h3 className="font-black text-gray-800 mb-6 text-sm tracking-widest uppercase">Growth Opportunities</h3>
               <div className="space-y-6">
                 {[
-                  { label: 'Market Readiness', value: 85, color: 'blue' },
-                  { label: 'Risk Mitigation', value: 72, color: 'purple' },
-                  { label: 'Goal Alignment', value: 94, color: 'emerald' }
+                  { label: 'Market Readiness', value: stats.career || 0, color: 'blue' },
+                  { label: 'Risk Mitigation', value: stats.finance || 0, color: 'purple' },
+                  { label: 'Goal Alignment', value: stats.balance || 0, color: 'emerald' }
                 ].map((m, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex justify-between text-xs font-bold uppercase tracking-tighter">
@@ -409,7 +465,7 @@ export default function HomeDashboardWeb() {
                 </div>
               </div>
               <button
-                onClick={() => navigate('/analytics')}
+                onClick={() => navigate('/priority-alerts')}
                 className="w-full py-2 bg-red-600 text-white rounded-lg font-black text-xs hover:bg-red-700 transition-all shadow-lg shadow-red-500/20"
               >
                 RESOLVE ALERTS NOW

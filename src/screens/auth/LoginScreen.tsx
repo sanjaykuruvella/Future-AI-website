@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
-import { Mail, Lock, Fingerprint, Globe, WifiOff, Wifi, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Mail, Lock, Fingerprint, Globe, WifiOff, Wifi } from 'lucide-react';
 import { useBackendStatus } from '../../hooks/useBackendStatus';
 
 import { loginUser } from '../../api/auth';
@@ -78,6 +78,7 @@ export default function LoginScreen() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="you@example.com"
+                  autoComplete="new-password"
                 />
               </div>
             </div>
@@ -92,6 +93,7 @@ export default function LoginScreen() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                 />
               </div>
             </div>

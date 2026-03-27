@@ -22,6 +22,24 @@ export default function SignUpScreenWeb() {
       return;
     }
 
+    const nameRegex = /^[a-zA-Z]+$/;
+    if (!nameRegex.test(formData.name)) {
+      toast.error('Full Name must contain only letters (no spaces)');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&\.\-\_])[A-Za-z\d@$!%*?&\.\-\_]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      toast.error('Password must be at least 8 characters long, contain an uppercase letter, a number, and a special character.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await registerUser(formData.name, formData.email, formData.password);
@@ -139,11 +157,16 @@ export default function SignUpScreenWeb() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+                  className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${formData.name && !/^[a-zA-Z]+$/.test(formData.name) ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
                   placeholder="John Doe"
                   required
                 />
               </div>
+              {formData.name && !/^[a-zA-Z]+$/.test(formData.name) && (
+                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                  Full Name must contain only letters (no spaces)
+                </p>
+              )}
             </div>
 
             {/* Email Input */}
@@ -157,11 +180,16 @@ export default function SignUpScreenWeb() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+                  className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
                   placeholder="you@example.com"
                   required
                 />
               </div>
+              {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                  Please enter a valid email address
+                </p>
+              )}
             </div>
 
             {/* Password Input */}
@@ -187,7 +215,24 @@ export default function SignUpScreenWeb() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Minimum 8 characters with letters and numbers</p>
+              <div className="mt-3 space-y-2">
+                <p className={`text-sm flex items-center gap-2 ${formData.password.length >= 8 ? 'text-green-500' : 'text-gray-500'}`}>
+                  <Check className={`w-4 h-4 ${formData.password.length >= 8 ? 'opacity-100' : 'opacity-50'}`} />
+                  Minimum 8 characters
+                </p>
+                <p className={`text-sm flex items-center gap-2 ${/[A-Z]/.test(formData.password) ? 'text-green-500' : 'text-gray-500'}`}>
+                  <Check className={`w-4 h-4 ${/[A-Z]/.test(formData.password) ? 'opacity-100' : 'opacity-50'}`} />
+                  At least 1 uppercase letter
+                </p>
+                <p className={`text-sm flex items-center gap-2 ${/\d/.test(formData.password) ? 'text-green-500' : 'text-gray-500'}`}>
+                  <Check className={`w-4 h-4 ${/\d/.test(formData.password) ? 'opacity-100' : 'opacity-50'}`} />
+                  At least 1 number
+                </p>
+                <p className={`text-sm flex items-center gap-2 ${/[@$!%*?&\.\-\_]/.test(formData.password) ? 'text-green-500' : 'text-gray-500'}`}>
+                  <Check className={`w-4 h-4 ${/[@$!%*?&\.\-\_]/.test(formData.password) ? 'opacity-100' : 'opacity-50'}`} />
+                  At least 1 special character
+                </p>
+              </div>
             </div>
 
             {/* Sign Up Button */}

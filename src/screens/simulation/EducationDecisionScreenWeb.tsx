@@ -12,7 +12,7 @@ export default function EducationDecisionScreenWeb() {
     education: 'Bachelors',
     education_num: '13',
     careerGoal: 'Tech',
-    country: 'United-States',
+    country: 'India',
     expectedIncome: '< ₹5L',
     workclass: 'Private',
     marital_status: 'Never-married',
@@ -23,7 +23,9 @@ export default function EducationDecisionScreenWeb() {
     capital_gain: '0',
     capital_loss: '0',
     hours_per_week: '40',
-    studyHours: 30
+    studyHours: 30,
+    risk: 50,
+    investment: 50
   });
 
   const isValid = formData.age && formData.education && formData.careerGoal && formData.country;
@@ -146,13 +148,13 @@ export default function EducationDecisionScreenWeb() {
               {/* Country */}
               <div>
                 <label className="block text-base font-medium text-gray-900 mb-2">Country</label>
-                <input
-                  type="text"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900"
-                  placeholder="United-States"
-                />
+                <div className="flex items-center justify-between rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-fuchsia-50 px-4 py-3.5 shadow-sm">
+                  <div>
+                    <p className="text-base font-bold text-gray-900">{formData.country}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-purple-700">Static Region</p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-purple-700 shadow-sm">Locked</span>
+                </div>
               </div>
 
               {/* Expected Income */}
@@ -204,7 +206,10 @@ export default function EducationDecisionScreenWeb() {
                             Capital_Gain: parseInt(formData.capital_gain),
                             Capital_Loss: parseInt(formData.capital_loss),
                             Hours_Per_Week: parseInt(formData.hours_per_week),
-                            Country: formData.country
+                            Country: formData.country,
+                            effort: formData.studyHours,
+                            risk: formData.risk,
+                            investment: formData.investment
                         }
                     }));
                     navigate('/simulation/processing');

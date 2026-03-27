@@ -29,17 +29,10 @@ export default function HomeDashboard() {
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={() => navigate('/notifications')}
-                className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center relative shadow-sm"
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
-              <button
                 onClick={() => navigate('/profile')}
-                className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center shadow-sm"
+                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm"
               >
-                <User className="w-5 h-5 text-gray-600" />
+                <User className="w-5 h-5 text-white" />
               </button>
             </div>
           </div>

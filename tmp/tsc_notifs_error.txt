@@ -1,0 +1,47 @@
+﻿
+src/screens/home/Notification
+sScreenWeb.tsx(7,3): error 
+TS6133: 'Clock' is declared 
+but its value is never read.
+src/screens/home/Notification
+sScreenWeb.tsx(7,18): error 
+TS6133: 'Archive' is 
+declared but its value is 
+never read.
+src/screens/home/Notification
+sScreenWeb.tsx(7,50): error 
+TS6133: 'TrendingDown' is 
+declared but its value is 
+never read.
+src/screens/home/Notification
+sScreenWeb.tsx(8,3): error 
+TS6133: 'Calendar' is 
+declared but its value is 
+never read.
+src/screens/home/Notification
+sScreenWeb.tsx(8,58): error 
+TS6133: 'Shield' is declared 
+but its value is never read.
+src/screens/home/Notification
+sScreenWeb.tsx(36,10): error 
+TS6133: 'isLoading' is 
+declared but its value is 
+never read.
+src/screens/home/Notification
+sScreenWeb.tsx(46,52): error 
+TS6133: 'i' is declared but 
+its value is never read.
+src/screens/home/Notification
+sScreenWeb.tsx(66,29): error 
+TS2345: Argument of type '{ 
+id: any; type: string; 
+category: any; icon: ForwardR
+efExoticComponent<Omit<Lucide
+Props, "ref"> & RefAttributes
+<SVGSVGElement>>; ... 10 
+more ...; priority: string; 
+}[]' is not assignable to 
+parameter of type 'SetStateAc
+tion<Notification[]>'.
+
+

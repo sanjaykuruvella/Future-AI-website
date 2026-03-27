@@ -14,14 +14,17 @@ export default function FinanceDecisionScreenWeb() {
     capital_loss: '10000',
     workclass: 'Private',
     hours_per_week: '40',
-    country: 'United-States',
+    country: 'India',
     education: 'Bachelors',
     education_num: '13',
     marital_status: 'Married-civ-spouse',
     occupation: 'Exec-managerial',
     relationship: 'Husband',
     race: 'White',
-    gender: 'Male'
+    gender: 'Male',
+    effort: 50,
+    risk: 50,
+    investment: 50
   });
 
   const isValid = formData.age && formData.salaryLevel && formData.country;
@@ -136,16 +139,43 @@ export default function FinanceDecisionScreenWeb() {
                 </div>
               </div>
 
+              {/* Continuous Drivers Sliders Setup */}
+              <div className="pt-4 border-t border-gray-100 flex flex-col space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm font-medium text-gray-700">Effort (Time Commitment)</label>
+                    <span className="text-sm font-black text-blue-600">{formData.effort}%</span>
+                  </div>
+                  <input type="range" min="10" max="100" value={formData.effort} onChange={(e) => setFormData({ ...formData, effort: Number(e.target.value) })} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm font-medium text-gray-700">Risk Factor (Exposure)</label>
+                    <span className="text-sm font-black text-rose-600">{formData.risk}%</span>
+                  </div>
+                  <input type="range" min="10" max="100" value={formData.risk} onChange={(e) => setFormData({ ...formData, risk: Number(e.target.value) })} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-rose-600" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm font-medium text-gray-700">Investment Intensity</label>
+                    <span className="text-sm font-black text-emerald-600">{formData.investment}%</span>
+                  </div>
+                  <input type="range" min="10" max="100" value={formData.investment} onChange={(e) => setFormData({ ...formData, investment: Number(e.target.value) })} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                </div>
+              </div>
+
               {/* Country */}
               <div>
                 <label className="block text-base font-medium text-gray-900 mb-2">Country</label>
-                <input
-                  type="text"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-base text-gray-900"
-                  placeholder="United-States"
-                />
+                <div className="flex items-center justify-between rounded-2xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3.5 shadow-sm">
+                  <div>
+                    <p className="text-base font-bold text-gray-900">{formData.country}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-green-700">Static Region</p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-green-700 shadow-sm">Locked</span>
+                </div>
               </div>
             </div>
 
@@ -175,7 +205,10 @@ export default function FinanceDecisionScreenWeb() {
                             Capital_Gain: parseInt(formData.capital_gain),
                             Capital_Loss: parseInt(formData.capital_loss),
                             Hours_Per_Week: parseInt(formData.hours_per_week),
-                            Country: formData.country
+                            Country: formData.country,
+                            effort: formData.effort,
+                            risk: formData.risk,
+                            investment: formData.investment
                         }
                     }));
                     navigate('/simulation/processing');

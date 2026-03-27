@@ -1,0 +1,15 @@
+﻿Field	Type	Null	Key	Default	Extra
+prediction_id	int(11)	NO	PRI	NULL	auto_increment
+user_id	int(11)	NO	MUL	NULL	
+decision_input	text	YES		NULL	
+success_probability	varchar(20)	YES		NULL	
+timeline	varchar(50)	YES		NULL	
+financial_impact	varchar(50)	YES		NULL	
+life_satisfaction	varchar(50)	YES		NULL	
+alternative_scenario	text	YES		NULL	
+future_comparison	text	YES		NULL	
+created_at	timestamp	NO		current_timestamp()	
+input_data	text	YES		NULL	
+forecast_result	varchar(100)	YES		NULL	
+risk_level	varchar(50)	YES		NULL	
+category	varchar(50)	YES		Career	

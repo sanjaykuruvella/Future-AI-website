@@ -30,12 +30,12 @@ export default function DecisionCategoryScreenWeb() {
         <CategoryCard
           icon={<Briefcase className="w-12 h-12 text-white" />}
           title="Career & Professional"
-          description="Predict outcomes for job changes, promotions, career pivots, starting a business, and skill development decisions"
+          description="Predict outcomes for job changes, promotions, career pivots, and skill development decisions"
           gradient="from-blue-500 to-cyan-600"
           bgGradient="from-blue-500/10 to-cyan-500/10"
           borderColor="border-blue-200"
           onClick={() => navigate('/simulation/career')}
-          examples={["Change jobs", "Ask for promotion", "Start business", "Career switch"]}
+          examples={["Change jobs", "Ask for promotion", "Career switch"]}
           timeEstimate="5-7 min"
         />
 

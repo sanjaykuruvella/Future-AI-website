@@ -1,10 +1,43 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { HelpCircle, Book, MessageCircle, Mail, FileText, Video, ChevronRight } from 'lucide-react';
+import { HelpCircle, Book, MessageCircle, Mail, FileText, Video, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { submitSupport } from '../../api/prediction';
+import { useState } from 'react';
 
 export default function HelpSupportScreenWeb() {
   const navigate = useNavigate();
+
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [category, setCategory] = useState('Technical Issue');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : { user_id: 1 };
+
+    try {
+      const response = await submitSupport(user.user_id, subject, message, category);
+      if (response.status) {
+        setIsSubmitted(true);
+        setSubject('');
+        setMessage('');
+      } else {
+        setError(response.error || 'Failed to submit support request');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const faqs = [
     {
@@ -85,40 +118,79 @@ export default function HelpSupportScreenWeb() {
               <p className="text-sm text-gray-600">Can't find what you're looking for? Send us a message</p>
             </div>
           </div>
-          <form className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-              <input
-                type="text"
-                placeholder="What do you need help with?"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              />
+          {isSubmitted ? (
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Message Sent!</h3>
+              <p className="text-gray-600 mb-6">Thank you for reaching out. Our team will get back to you shortly.</p>
+              <button
+                onClick={() => setIsSubmitted(false)}
+                className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all"
+              >
+                Send Another Message
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-              <textarea
-                rows={5}
-                placeholder="Describe your issue or question in detail..."
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-              <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
-                <option>Technical Issue</option>
-                <option>Account Question</option>
-                <option>Feature Request</option>
-                <option>Billing Question</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-xl transition-all font-semibold"
-            >
-              Send Message
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={handleSupportSubmit} className="space-y-4">
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+                  {error}
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <input
+                  type="text"
+                  required
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="What do you need help with?"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                <textarea
+                  required
+                  rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Describe your issue or question in detail..."
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                >
+                  <option>Technical Issue</option>
+                  <option>Account Question</option>
+                  <option>Feature Request</option>
+                  <option>Billing Question</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-xl transition-all font-semibold flex items-center justify-center space-x-2 disabled:opacity-70"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <span>Send Message</span>
+                )}
+              </button>
+            </form>
+          )}
         </WebCard>
 
 

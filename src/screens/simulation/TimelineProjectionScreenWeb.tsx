@@ -63,7 +63,7 @@ export default function TimelineProjectionScreenWeb() {
     },
     {
       month: 3,
-      title: 'First Major Achievement',
+      title: 'First Major Milestone',
       description: 'Complete first project or reach initial milestone',
       status: 'positive',
       impact: '₹52,000 monthly income'
@@ -280,26 +280,19 @@ export default function TimelineProjectionScreenWeb() {
             <div>
               <p className="text-sm text-gray-600">Key Milestones</p>
               <p className="text-2xl font-bold text-gray-800">5</p>
-              <p className="text-xs text-purple-600">Major achievements</p>
+              <p className="text-xs text-purple-600">Major milestones reached</p>
             </div>
           </div>
         </WebCard>
       </div>
 
       {/* Action */}
-      <div className="flex items-center justify-between pt-6 border-t">
+      <div className="flex items-center justify-center pt-6 border-t border-gray-100">
         <button
           onClick={() => navigate('/simulation/prediction-summary')}
-          className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+          className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
         >
-          Back to Summary
-        </button>
-        <button
-          onClick={() => navigate('/simulation/scenario-map')}
-          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center space-x-2"
-        >
-          <span>Explore Scenario Map</span>
-          <ArrowRight className="w-5 h-5" />
+          Back to Results
         </button>
       </div>
     </WebLayout>

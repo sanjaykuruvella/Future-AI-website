@@ -23,13 +23,21 @@ export default function AIProcessingScreenWeb() {
 
         try {
             // 1. Predict Future (this also saves to DB on backend)
-            await predictFuture({ ...pending.features, user_id: user.user_id });
+            await predictFuture({ 
+                ...pending.features, 
+                category: pending.category, 
+                input_text: pending.input,
+                current_situation: pending.currentSituation || '',
+                desired_outcome: pending.desiredOutcome || '',
+                selected_timeline: pending.selectedTimeline || '',
+                user_id: user.user_id 
+            });
             
             // 2. Clear pending and navigate
             localStorage.removeItem('pending_simulation');
             
             // Give user time to see the animation
-            setTimeout(() => navigate('/analytics'), 2000);
+            setTimeout(() => navigate('/simulation/prediction-summary'), 2000);
         } catch (err: any) {
             console.error('Simulation failed:', err);
             setError(err.message || 'Failed to complete simulation. Please ensure models are trained.');

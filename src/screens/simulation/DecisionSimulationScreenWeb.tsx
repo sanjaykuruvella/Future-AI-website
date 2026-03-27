@@ -15,6 +15,9 @@ export default function DecisionSimulationScreenWeb() {
   const [currentSituation, setCurrentSituation] = useState('');
   const [desiredOutcome, setDesiredOutcome] = useState('');
   const [timeline, setTimeline] = useState('6months');
+  const [effort, setEffort] = useState(50);
+  const [risk, setRisk] = useState(50);
+  const [investment, setInvestment] = useState(50);
 
   const categories = [
     { id: 'career', icon: Briefcase, label: 'Career', color: 'from-blue-500 to-cyan-500', description: 'Job changes, promotions, career pivots' },
@@ -27,6 +30,9 @@ export default function DecisionSimulationScreenWeb() {
       localStorage.setItem('pending_simulation', JSON.stringify({
         category: selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1),
         input: decisionInput,
+        currentSituation,
+        desiredOutcome,
+        selectedTimeline: timeline,
         features: {
             Age: 30, // Default values for free-text simulation
             Workclass: 'Private',
@@ -40,7 +46,20 @@ export default function DecisionSimulationScreenWeb() {
             Capital_Gain: 0,
             Capital_Loss: 0,
             Hours_Per_Week: 40,
-            Country: 'United-States'
+            Country: 'India',
+            effort: effort,
+            risk: risk,
+            investment: investment,
+            timeframe:
+              timeline === '3months'
+                ? 25
+                : timeline === '6months'
+                  ? 35
+                  : timeline === '1year'
+                    ? 55
+                    : timeline === '2years'
+                      ? 70
+                      : 85
         }
       }));
       navigate('/simulation/processing');
@@ -148,6 +167,40 @@ export default function DecisionSimulationScreenWeb() {
                   <option value="5years">5 Years</option>
                   <option value="10years">10 Years</option>
                 </select>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100 space-y-4">
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Simulation Driver Settings</span>
+                </h3>
+                <p className="text-xs text-slate-400 font-medium">Fine-tune weights for accurate AI coefficient adjustment scoring.</p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1 items-baseline">
+                      <label className="text-xs font-bold text-gray-500">Effort (Time commitment)</label>
+                      <span className="text-xs font-black text-blue-600">{effort}%</span>
+                    </div>
+                    <input type="range" min="10" max="100" value={effort} onChange={(e) => setEffort(Number(e.target.value))} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-1 items-baseline">
+                      <label className="text-xs font-bold text-gray-500">Risk Factor (Exposure)</label>
+                      <span className="text-xs font-black text-rose-600">{risk}%</span>
+                    </div>
+                    <input type="range" min="10" max="100" value={risk} onChange={(e) => setRisk(Number(e.target.value))} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-rose-600" />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-1 items-baseline">
+                      <label className="text-xs font-bold text-gray-500">Investment Intensity</label>
+                      <span className="text-xs font-black text-emerald-600">{investment}%</span>
+                    </div>
+                    <input type="range" min="10" max="100" value={investment} onChange={(e) => setInvestment(Number(e.target.value))} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                  </div>
+                </div>
               </div>
             </div>
           </WebCard>

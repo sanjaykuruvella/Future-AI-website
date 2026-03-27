@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { User, Globe, Palette, HelpCircle, MessageSquare, LogOut, ChevronRight } from 'lucide-react';
+import { HelpCircle, MessageSquare, LogOut, ChevronRight } from 'lucide-react';
 
 export default function SettingsScreenWeb() {
   const navigate = useNavigate();
@@ -14,21 +14,15 @@ export default function SettingsScreenWeb() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Account Settings */}
+        {/* Privacy & Policy */}
         <SettingCard
-          icon={<User className="w-6 h-6 text-blue-600" />}
-          title="Account Settings"
-          description="Manage your profile, email, and password"
-          onClick={() => navigate('/settings/account')}
+          icon={<span className="w-6 h-6 text-2xl flex items-center justify-center pt-1.5">🛡️</span>}
+          title="Privacy & Policy"
+          description="View our privacy policy and terms"
+          onClick={() => navigate('/settings/privacy-policy')}
         />
 
-        {/* Language */}
-        <SettingCard
-          icon={<Globe className="w-6 h-6 text-orange-600" />}
-          title="Language & Region"
-          description="Change language and location settings"
-          onClick={() => navigate('/settings/language')}
-        />
+
 
 
 

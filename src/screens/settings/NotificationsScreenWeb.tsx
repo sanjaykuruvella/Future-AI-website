@@ -12,7 +12,6 @@ export default function NotificationsScreenWeb() {
     simulationComplete: true,
     weeklyReport: true,
     aiInsights: true,
-    achievementUnlocked: false,
     systemUpdates: true,
   });
 
@@ -110,13 +109,6 @@ export default function NotificationsScreenWeb() {
               checked={settings.aiInsights}
               onChange={() => toggleSetting('aiInsights')}
               icon={<span className="text-lg">💡</span>}
-            />
-            <NotificationToggle
-              title="Achievement Unlocked"
-              description="When you reach new milestones"
-              checked={settings.achievementUnlocked}
-              onChange={() => toggleSetting('achievementUnlocked')}
-              icon={<span className="text-lg">🏆</span>}
             />
           </div>
         </WebCard>

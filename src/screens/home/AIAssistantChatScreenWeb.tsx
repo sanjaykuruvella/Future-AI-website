@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
-import { Send, Sparkles, Brain, Lightbulb, TrendingUp, AlertCircle, CheckCircle2, FileText, BarChart3 } from 'lucide-react';
+import { Send, Sparkles, Brain, Lightbulb, TrendingUp, BarChart3 } from 'lucide-react';
 import { chatAssistant } from '../../api/prediction';
 
 interface Message {
@@ -13,7 +12,6 @@ interface Message {
 }
 
 export default function AIAssistantChatScreenWeb() {
-  const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -24,8 +22,7 @@ export default function AIAssistantChatScreenWeb() {
       suggestions: [
         'Help me decide on a career change',
         'Should I invest in real estate?',
-        'Analyze my education options',
-        'What are the risks of starting a business?'
+        'Analyze my education options'
       ]
     },
     {
@@ -206,17 +203,6 @@ export default function AIAssistantChatScreenWeb() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <button className="px-4 py-2 bg-white/50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition-all">
-                  <FileText className="w-4 h-4 inline mr-2" />
-                  Export Chat
-                </button>
-                <button
-                  onClick={() => navigate('/quick-simulation')}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-                >
-                  <BarChart3 className="w-4 h-4 inline mr-2" />
-                  Run Simulation
-                </button>
               </div>
             </div>
           </div>

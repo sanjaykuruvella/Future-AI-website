@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\FUTURE AI WEBSITE\backend\app.py", line 848, in prediction_insights
+    avg_success = sum(float(p.get('success_probability', 50)) for p in weekly_data) / len(weekly_data)
+                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\FUTURE AI WEBSITE\backend\app.py", line 848, in <genexpr>
+    avg_success = sum(float(p.get('success_probability', 50)) for p in weekly_data) / len(weekly_data)
+                      ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: float() argument must be a string or a real number, not 'NoneType'

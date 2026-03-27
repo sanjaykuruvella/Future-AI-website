@@ -21,7 +21,6 @@ import FeatureIntro3ScreenWeb from "./screens/onboarding/FeatureIntro3ScreenWeb"
 // Web Home & Dashboard
 import HomeDashboardWeb from "./screens/home/HomeDashboardWeb";
 import QuickSimulationHubWeb from "./screens/home/QuickSimulationHubWeb";
-import NotificationsHomeScreenWeb from "./screens/home/NotificationsScreenWeb";
 import AIAssistantChatScreenWeb from "./screens/home/AIAssistantChatScreenWeb";
 
 // No mobile fallbacks needed - all converted to web
@@ -29,8 +28,7 @@ import AIAssistantChatScreenWeb from "./screens/home/AIAssistantChatScreenWeb";
 // Web Settings & Profile
 import SettingsScreenWeb from "./screens/settings/SettingsScreenWeb";
 import ProfileScreenWeb from "./screens/profile/ProfileScreenWeb";
-import AccountSettingsScreenWeb from "./screens/settings/AccountSettingsScreenWeb";
-import NotificationsSettingsScreenWeb from "./screens/settings/NotificationsScreenWeb";
+import PrivacyPolicyScreenWeb from "./screens/settings/PrivacyPolicyScreenWeb";
 import PrivacySecurityScreenWeb from "./screens/settings/PrivacySecurityScreenWeb";
 import DisplaySettingsScreenWeb from "./screens/settings/DisplaySettingsScreenWeb";
 import LanguageRegionScreenWeb from "./screens/settings/LanguageRegionScreenWeb";
@@ -54,8 +52,10 @@ import AIProcessingScreenWeb from "./screens/simulation/AIProcessingScreenWeb";
 import AnalyticsDashboardWeb from "./screens/analysis/AnalyticsDashboardWeb";
 import TrendAnalysisScreenWeb from "./screens/analysis/TrendAnalysisScreenWeb";
 import GrowthMetricsScreenWeb from "./screens/analysis/GrowthMetricsScreenWeb";
-import AlternateScenarioScreen from "./screens/analysis/AlternateScenarioScreen";
-import HistoryTimelineScreen from "./screens/analysis/HistoryTimelineScreen";
+import AlternateScenarioScreenWeb from "./screens/analysis/AlternateScenarioScreenWeb";
+import CompareFuturesScreenWeb from "./screens/analysis/CompareFuturesScreenWeb";
+import HistoryTimelineScreenWeb from "./screens/analysis/HistoryTimelineScreenWeb";
+import GoalsScreenWeb from "./screens/analysis/GoalsScreenWeb";
 
 // Web Simulation Components
 import PredictionSummaryScreenWeb from "./screens/simulation/PredictionSummaryScreenWeb";
@@ -65,6 +65,7 @@ import RiskVsRewardScreen from "./screens/simulation/RiskVsRewardScreen";
 
 // Home Components
 import OpportunityHighlightsScreen from "./screens/home/OpportunityHighlightsScreen";
+import RiskAlertsScreenWeb from "./screens/home/RiskAlertsScreenWeb";
 
 // All analysis and profile screens now in web format
 
@@ -85,8 +86,7 @@ export const router = createBrowserRouter([
   { path: "/quick-simulation", element: <QuickSimulationHubWeb /> },
   { path: "/analytics", element: <AnalyticsDashboardWeb /> },
   { path: "/settings", element: <SettingsScreenWeb /> },
-  { path: "/settings/account", element: <AccountSettingsScreenWeb /> },
-  { path: "/settings/notifications", element: <NotificationsSettingsScreenWeb /> },
+  { path: "/settings/privacy-policy", element: <PrivacyPolicyScreenWeb /> },
   { path: "/settings/privacy", element: <PrivacySecurityScreenWeb /> },
   { path: "/settings/display", element: <DisplaySettingsScreenWeb /> },
   { path: "/settings/language", element: <LanguageRegionScreenWeb /> },
@@ -109,16 +109,18 @@ export const router = createBrowserRouter([
   { path: "/feature-intro-3", element: <FeatureIntro3ScreenWeb /> },
 
   // Main app routes (all web-optimized)
-  { path: "/notifications", element: <NotificationsHomeScreenWeb /> },
   { path: "/analysis/trends", element: <TrendAnalysisScreenWeb /> },
   { path: "/analysis/growth", element: <GrowthMetricsScreenWeb /> },
-  { path: "/analysis/history-timeline", element: <HistoryTimelineScreen /> },
-  { path: "/analysis/alternate", element: <AlternateScenarioScreen /> },
+  { path: "/analysis/history-timeline", element: <HistoryTimelineScreenWeb /> },
+  { path: "/analysis/goals", element: <GoalsScreenWeb /> },
+  { path: "/analysis/alternate", element: <AlternateScenarioScreenWeb /> },
+  { path: "/analysis/compare", element: <CompareFuturesScreenWeb /> },
   { path: "/simulation/prediction-summary", element: <PredictionSummaryScreenWeb /> },
   { path: "/simulation/scenario-map", element: <ScenarioMapScreen /> },
   { path: "/simulation/timeline", element: <TimelineProjectionScreenWeb /> },
   { path: "/simulation/risk-reward", element: <RiskVsRewardScreen /> },
   { path: "/opportunity-highlights", element: <OpportunityHighlightsScreen /> },
+  { path: "/priority-alerts", element: <RiskAlertsScreenWeb /> },
 
   // Catch-all redirect for any undefined routes - redirects to analytics
   { path: "*", element: <AnalyticsDashboardWeb /> },

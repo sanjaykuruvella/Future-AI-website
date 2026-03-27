@@ -1,0 +1,18 @@
+﻿
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(7,3): 
+error TS6133: 'Filter' is 
+declared but its value is 
+never read.
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(7,33): 
+error TS6133: 'PieChart' is 
+declared but its value is 
+never read.
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(7,57): 
+error TS6133: 
+'ArrowDownRight' is declared 
+but its value is never read.
+
+

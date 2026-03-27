@@ -1,6 +1,8 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { Sparkles, Home, Target, Settings, User, Bell, Search, BarChart3 } from 'lucide-react';
+import { Sparkles, Home, Settings, User, Search, BarChart3 } from 'lucide-react';
+import { getProfile } from '../api/auth';
+import { normalizeProfilePhoto } from '../utils/profilePhoto';
 
 interface WebLayoutProps {
   children: ReactNode;
@@ -19,6 +21,8 @@ export function WebLayout({
 }: WebLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [headerPhoto, setHeaderPhoto] = useState('');
 
   const maxWidthClasses = {
     full: 'max-w-full',
@@ -29,11 +33,104 @@ export function WebLayout({
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      // Navigate to analytics with a search query param
+      navigate(`/analytics?search=${encodeURIComponent(trimmed)}`);
+      setSearchQuery('');
+    }
+  };
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      setHeaderPhoto('');
+      return;
+    }
+
+    const user = JSON.parse(userStr);
+    const localPhoto = normalizeProfilePhoto(user.profile_photo);
+    if (localPhoto) {
+      setHeaderPhoto(localPhoto);
+    }
+
+    if (!user.email) {
+      return;
+    }
+
+    getProfile(user.email)
+      .then((profileData) => {
+        const freshPhoto = normalizeProfilePhoto(profileData?.profile_photo);
+        const resolvedPhoto = freshPhoto || localPhoto || '';
+        setHeaderPhoto(resolvedPhoto);
+
+        const mergedUser = {
+          ...user,
+          ...profileData,
+          profile_photo: resolvedPhoto,
+        };
+        localStorage.setItem('user', JSON.stringify(mergedUser));
+      })
+      .catch((err) => {
+        console.error('Failed to refresh profile photo in header:', err);
+      });
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const refreshProfilePhoto = () => {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        setHeaderPhoto('');
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      if (!user.email) {
+        return;
+      }
+
+      const localPhoto = normalizeProfilePhoto(user.profile_photo);
+      if (localPhoto) {
+        setHeaderPhoto(localPhoto);
+      }
+
+      getProfile(user.email)
+        .then((profileData) => {
+          const freshPhoto = normalizeProfilePhoto(profileData?.profile_photo);
+          const resolvedPhoto = freshPhoto || localPhoto || '';
+          setHeaderPhoto(resolvedPhoto);
+          localStorage.setItem('user', JSON.stringify({
+            ...user,
+            ...profileData,
+            profile_photo: resolvedPhoto,
+          }));
+        })
+        .catch((err) => {
+          console.error('Failed to refresh profile photo on focus:', err);
+        });
+    };
+
+    window.addEventListener('focus', refreshProfilePhoto);
+    window.addEventListener('storage', refreshProfilePhoto);
+
+    return () => {
+      window.removeEventListener('focus', refreshProfilePhoto);
+      window.removeEventListener('storage', refreshProfilePhoto);
+    };
+  }, []);
+
+  useEffect(() => {
+    const currentQuery = new URLSearchParams(location.search).get('search') || '';
+    setSearchQuery(currentQuery);
+  }, [location.pathname, location.search]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50">
       {/* Top Navigation Bar */}
       {showHeader && (
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm">
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-200/50 shadow-sm">
           <div className="max-w-screen-2xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo & Brand */}
@@ -51,30 +148,34 @@ export function WebLayout({
 
               {/* Search Bar */}
               <div className="hidden md:flex flex-1 max-w-xl mx-8">
-                <div className="relative w-full">
+                <form onSubmit={handleSearch} className="relative w-full">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search simulations, insights, goals..."
                     className="w-full pl-12 pr-4 py-3 bg-gray-100/80 backdrop-blur-sm border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                   />
-                </div>
+                </form>
               </div>
 
               {/* Right Actions */}
               <div className="flex items-center space-x-3">
                 <button 
-                  onClick={() => navigate('/notifications')}
-                  className="relative w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-all"
-                >
-                  <Bell className="w-5 h-5 text-gray-700" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-medium">3</span>
-                </button>
-                <button 
                   onClick={() => navigate('/profile')}
-                  className="w-11 h-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center hover:shadow-lg transition-all"
+                  className="w-11 h-11 overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center hover:shadow-lg transition-all"
                 >
-                  <User className="w-5 h-5 text-white" />
+                  {headerPhoto ? (
+                    <img
+                      src={headerPhoto}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={() => setHeaderPhoto('')}
+                    />
+                  ) : (
+                    <User className="w-5 h-5 text-white" />
+                  )}
                 </button>
               </div>
             </div>
@@ -111,10 +212,16 @@ export function WebLayout({
                 active={isActive('/analytics')}
               />
               <NavItem 
-                icon={<span className="w-5 h-5 flex items-center justify-center text-purple-600">📈</span>}
-                label="Trend Analysis"
-                onClick={() => navigate('/analysis/trends')}
-                active={isActive('/analysis/trends')}
+                icon={<span className="w-5 h-5 flex items-center justify-center text-blue-600">🕰️</span>}
+                label="History"
+                onClick={() => navigate('/analysis/history-timeline')}
+                active={isActive('/analysis/history-timeline')}
+              />
+              <NavItem 
+                icon={<span className="w-5 h-5 flex items-center justify-center text-orange-600">🎯</span>}
+                label="Goals"
+                onClick={() => navigate('/analysis/goals')}
+                active={isActive('/analysis/goals')}
               />
               <NavItem 
                 icon={<span className="w-5 h-5 flex items-center justify-center text-green-600">📊</span>}
@@ -132,12 +239,6 @@ export function WebLayout({
                 label="Settings"
                 onClick={() => navigate('/settings')}
                 active={isActive('/settings')}
-              />
-              <NavItem 
-                icon={<User className="w-5 h-5" />}
-                label="Profile"
-                onClick={() => navigate('/profile')}
-                active={isActive('/profile')}
               />
             </nav>
           </aside>

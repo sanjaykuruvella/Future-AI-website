@@ -31,7 +31,6 @@ export default function DemoNavigationScreen() {
         { path: '/home', label: 'Home Dashboard (WEB)' },
         { path: '/quick-simulation', label: 'Quick Simulation Hub (WEB)' },
         { path: '/ai-chat', label: 'AI Assistant Chat (WEB)' },
-        { path: '/notifications', label: 'Notifications (WEB)' },
       ]
     },
     {

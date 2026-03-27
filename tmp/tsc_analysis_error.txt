@@ -1,0 +1,130 @@
+﻿
+src/screens/analysis/Analytic
+sDashboardWeb.tsx(6,3): 
+error TS6133: 'TrendingUp' 
+is declared but its value is 
+never read.
+src/screens/analysis/Analytic
+sDashboardWeb.tsx(10,13): 
+error TS6133: 'CheckCircle2' 
+is declared but its value is 
+never read.
+src/screens/analysis/Analytic
+sDashboardWeb.tsx(11,3): 
+error TS6133: 'Calendar' is 
+declared but its value is 
+never read.
+src/screens/analysis/Analytic
+sDashboardWeb.tsx(11,13): 
+error TS6133: 'Clock' is 
+declared but its value is 
+never read.
+src/screens/analysis/Analytic
+sDashboardWeb.tsx(15,42): 
+error TS6133: 
+'PolarRadiusAxis' is 
+declared but its value is 
+never read.
+src/screens/analysis/Analytic
+sDashboardWeb.tsx(22,10): 
+error TS6133: 'insights' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(5,50): 
+error TS6133: 'Download' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(6,33): 
+error TS6133: 'TrendingDown' 
+is declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(7,8): 
+error TS6133: 'Clock' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(7,29): 
+error TS6133: 'Activity' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(11,3): 
+error TS6133: 'LineChart' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(11,14): 
+error TS6133: 'Line' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(13,3): 
+error TS6133: 
+'RadialBarChart' is declared 
+but its value is never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(13,19): 
+error TS6133: 'RadialBar' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(13,30): 
+error TS6133: 
+'PolarAngleAxis' is declared 
+but its value is never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(13,46): 
+error TS6133: 
+'ComposedChart' is declared 
+but its value is never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(21,10): 
+error TS6133: 
+'selectedPeriod' is declared 
+but its value is never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(21,26): 
+error TS6133: 
+'setSelectedPeriod' is 
+declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(144,9): 
+error TS6133: 'radialData' 
+is declared but its value is 
+never read.
+src/screens/analysis/GrowthMe
+tricsScreenWeb.tsx(214,9): 
+error TS6133: 'colorMap' is 
+declared but its value is 
+never read.
+src/screens/analysis/HistoryT
+imelineScreen.tsx(84,34): 
+error TS6133: 'index' is 
+declared but its value is 
+never read.
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(6,3): 
+error TS6133: 'Filter' is 
+declared but its value is 
+never read.
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(6,33): 
+error TS6133: 'PieChart' is 
+declared but its value is 
+never read.
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(6,57): 
+error TS6133: 
+'ArrowDownRight' is declared 
+but its value is never read.
+src/screens/analysis/TrendAna
+lysisScreenWeb.tsx(14,9): 
+error TS6133: 'navigate' is 
+declared but its value is 
+never read.
+
+

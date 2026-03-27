@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
-import { TrendingUp, Award, Target, Sparkles } from 'lucide-react';
+import { TrendingUp, Target, Sparkles } from 'lucide-react';
 
 export default function GrowthMetricsScreen() {
   const navigate = useNavigate();
@@ -93,24 +93,6 @@ export default function GrowthMetricsScreen() {
             </GlassCard>
           ))}
         </div>
-
-        <GlassCard className="bg-blue-50/50">
-          <h3 className="font-semibold text-gray-800 mb-3">Key Achievements</h3>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
-              <Award className="w-4 h-4 text-yellow-600" />
-              <span>Made 15 successful predictions this month</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
-              <Award className="w-4 h-4 text-blue-600" />
-              <span>Improved decision speed by 25%</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
-              <Award className="w-4 h-4 text-green-600" />
-              <span>Maintained 90%+ goal alignment for 3 months</span>
-            </div>
-          </div>
-        </GlassCard>
       </div>
     </MobileLayout>
   );

@@ -10,7 +10,7 @@ export default function EducationDecisionScreen() {
   const [yearsStudied, setYearsStudied] = useState('15');
   const [studyHours, setStudyHours] = useState(30);
   const [careerGoal, setCareerGoal] = useState('Tech');
-  const [country, setCountry] = useState('USA');
+  const [country, setCountry] = useState('India');
   const [expectedIncome, setExpectedIncome] = useState('< $50k');
 
   const isValid = age && currentDegree && careerGoal && country && expectedIncome;

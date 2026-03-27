@@ -12,6 +12,16 @@ export const updateProfile = async (userId: number, name: string, email: string,
     return apiRequest<any>(`/update_profile/${userId}`, 'PUT', { name, email, profile_photo: profilePhoto });
 };
 
+export const getProfilePhoto = async (email: string) => {
+    const encodedEmail = encodeURIComponent(email);
+    return apiRequest<any>(`/get-profile-photo/${encodedEmail}`, 'GET');
+};
+
+export const getProfile = async (email: string) => {
+    const encodedEmail = encodeURIComponent(email);
+    return apiRequest<any>(`/get-profile/${encodedEmail}`, 'GET');
+};
+
 export const forgotPassword = async (email: string, newPassword: string) => {
     return apiRequest<any>('/forgot_password', 'POST', { email, new_password: newPassword });
 };

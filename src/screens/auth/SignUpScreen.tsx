@@ -4,14 +4,48 @@ import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
 import { Mail, Lock, User } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SignUpScreen() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    // Optional typing validation
+    if (value && !emailRegex.test(value)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
 
   const handleSignUp = () => {
+    if (!name || !email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    const nameRegex = /^[a-zA-Z]+$/;
+    if (!nameRegex.test(name)) {
+      toast.error('Full Name must contain only letters (no spaces)');
+      return;
+    }
+
+    // Required submission validation
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
     navigate('/home');
   };
 
@@ -29,14 +63,17 @@ export default function SignUpScreen() {
               <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
+                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className={`w-full pl-10 pr-4 py-2.5 bg-white/50 border ${name && !/^[a-zA-Z]+$/.test(name) ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 text-sm`}
                   placeholder="John Doe"
                 />
               </div>
+              {name && !/^[a-zA-Z]+$/.test(name) && (
+                <p className="text-red-500 text-xs mt-1">Full Name must contain only letters (no spaces)</p>
+              )}
             </div>
 
             <div>
@@ -46,11 +83,12 @@ export default function SignUpScreen() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  onChange={handleEmailChange}
+                  className={`w-full pl-10 pr-4 py-2.5 bg-white/50 border ${emailError ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 text-sm`}
                   placeholder="you@example.com"
                 />
               </div>
+              {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
             </div>
 
             <div>
