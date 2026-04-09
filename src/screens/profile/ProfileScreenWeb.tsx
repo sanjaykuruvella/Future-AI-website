@@ -162,12 +162,13 @@ export default function ProfileScreenWeb() {
         e.target.value = '';
     };
 
+    const lastPrediction = history.length > 0 ? history[0] : null;
     const behavioralData = [
-      { subject: 'Finance', value: 80, fullMark: 100 },
-      { subject: 'Career', value: 95, fullMark: 100 },
-      { subject: 'Education', value: 70, fullMark: 100 },
-      { subject: 'Risk Check', value: 65, fullMark: 100 },
-      { subject: 'Growth', value: 88, fullMark: 100 }
+      { subject: 'Finance', value: lastPrediction ? Math.round(parseFloat(lastPrediction.financial_impact) || 50) : 50, fullMark: 100 },
+      { subject: 'Career', value: lastPrediction ? Math.round(parseFloat(lastPrediction.success_probability) || 50) : 50, fullMark: 100 },
+      { subject: 'Satisfaction', value: lastPrediction ? Math.round(parseFloat(lastPrediction.life_satisfaction) || 50) : 50, fullMark: 100 },
+      { subject: 'Risk Level', value: lastPrediction ? (lastPrediction.risk_level === 'high' ? 30 : lastPrediction.risk_level === 'medium' ? 60 : 90) : 50, fullMark: 100 },
+      { subject: 'Consistency', value: history.length > 5 ? 90 : history.length > 2 ? 70 : 50, fullMark: 100 }
     ];
 
   if (isLoading) {

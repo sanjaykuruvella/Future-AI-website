@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 from email_validator import validate_email, EmailNotValidError
@@ -20,7 +20,7 @@ from urllib.parse import unquote
 # ---------------------------------
 # APP INITIALIZATION
 # ---------------------------------
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../dist', static_url_path='/')
 app.config['SECRET_KEY'] = 'this_is_secret_key_change_it'
 app.config['BASE_URL'] = 'http://180.235.121.253:8142/'  # 👈 Change this if using ngrok
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -389,6 +389,16 @@ def get_profile_photo(email):
         cursor.close()
 
         if user:
+            photo_path = user["profile_photo"]
+            # Verify file exists if it's not base64 or empty
+            if photo_path and not photo_path.startswith('data:') and '.' in str(photo_path):
+                full_path = os.path.join(app.root_path, '..', photo_path)
+                if not os.path.exists(full_path):
+                    # If file doesn't exist, maybe it's in a different relative path
+                    alt_path = os.path.join(app.root_path, photo_path)
+                    if not os.path.exists(alt_path):
+                        user["profile_photo"] = "" # Reset to empty if file not found
+            
             return jsonify({
                 "status": "success",
                 "name": user["name"],
@@ -396,7 +406,12 @@ def get_profile_photo(email):
                 "profile_photo": normalize_profile_photo(user["profile_photo"])
             })
         else:
-            return jsonify({"message": "User not found"}), 404
+            return jsonify({
+                "status": "success",
+                "name": "User",
+                "email": email,
+                "profile_photo": ""
+            }) # Changed from 404 to success with empty photo for stability
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -2325,11 +2340,20 @@ Message:
         }), 500
 
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
+
 # ---------------------------------
 # RUN SERVER
 # ---------------------------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8142, debug=False)
 
 
 

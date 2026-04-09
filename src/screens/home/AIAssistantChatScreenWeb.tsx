@@ -18,29 +18,11 @@ export default function AIAssistantChatScreenWeb() {
       id: 1,
       text: 'Hello! I\'m your AI Decision Assistant powered by advanced machine learning. I can help you analyze life decisions, explore outcomes, and provide personalized insights across career, finance, education, and personal development.',
       sender: 'ai',
-      timestamp: '10:30 AM',
+      timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       suggestions: [
         'Help me decide on a career change',
         'Should I invest in real estate?',
         'Analyze my education options'
-      ]
-    },
-    {
-      id: 2,
-      text: 'I\'m thinking about changing careers from software engineering to product management. What should I consider?',
-      sender: 'user',
-      timestamp: '10:32 AM'
-    },
-    {
-      id: 3,
-      text: 'Excellent question! Career transitions are significant decisions. Let me analyze this for you:\n\n**Key Considerations:**\n\n1. **Skills Transfer**: Your technical background is highly valuable in PM roles. You\'ll leverage:\n   - Technical understanding for better product decisions\n   - Engineering collaboration skills\n   - System thinking abilities\n\n2. **Timeline**: Typical transition takes 6-12 months\n   - 3 months: Skill development (product strategy, user research)\n   - 3-6 months: Job search and interviews\n   - Building portfolio projects\n\n3. **Financial Impact**:\n   - Potential salary: ₹18-25 LPA (mid-level PM)\n   - Current engineering salary: ₹15-20 LPA\n   - Net impact: +15-20% potential upside\n\n4. **Success Probability**: 78% based on similar profiles\n\nWould you like me to create a detailed simulation for this career path?',
-      sender: 'ai',
-      timestamp: '10:32 AM',
-      suggestions: [
-        'Create detailed simulation',
-        'Show salary comparison',
-        'What skills do I need?',
-        'Show timeline projection'
       ]
     }
   ]);

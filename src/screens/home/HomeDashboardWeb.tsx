@@ -23,18 +23,28 @@ export default function HomeDashboardWeb() {
     active_goals: 0,
     simulation_count: 0,
     ai_insights: 0,
+    career: 0,
+    finance: 0,
+    balance: 0,
     trend: '+0 this week'
   });
+  const [insights, setInsights] = useState<{alerts: any[], weekly_summary: any, forecast: any} | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       try {
          const data = await apiRequest<any>(`/home_data/${user.user_id}`);
          if (data && !data.error) {
              setStats(data);
          }
+         
+         const insightsData = await apiRequest<any>(`/prediction_insights/${user.user_id}`);
+         if (insightsData && !insightsData.error) {
+             setInsights(insightsData);
+         }
+
          const historyData = await getPredictionsHistory(user.user_id);
          setHistory(Array.isArray(historyData) ? historyData : []);
       } catch (err) {
@@ -44,7 +54,7 @@ export default function HomeDashboardWeb() {
       }
     };
     if (user && user.user_id) {
-         fetchStats();
+         fetchDashboardData();
     }
   }, [user.user_id]);
 
@@ -52,13 +62,14 @@ export default function HomeDashboardWeb() {
   const activeGoals = history.length > 0 ? history.length : Math.max(stats.active_goals ?? 0, stats.simulation_count ?? 0);
   const pathCompletion = activeGoals > 0 ? Math.round((stats.future_score ?? 0) * 1) : 0;
 
-  const scoreData = [
-    { value: 65 }, { value: 72 }, { value: 68 }, { value: 78 }, { value: 82 }, { value: 85 }, { value: 87 }
-  ];
+  // Generate dynamic chart data from history
+  const scoreData = history.length > 0 
+    ? [...history].reverse().slice(-7).map((h) => ({ value: Math.round(parseFloat(h.success_probability) || 50) }))
+    : [ { value: 65 }, { value: 72 }, { value: 68 }, { value: 78 }, { value: 82 }, { value: 85 }, { value: 87 } ];
 
-  const simulationData = [
-    { value: 4 }, { value: 6 }, { value: 3 }, { value: 8 }, { value: 5 }, { value: 7 }, { value: 6 }
-  ];
+  const simulationData = history.length > 0
+    ? [...history].reverse().slice(-7).map((h, i) => ({ value: (i + 1) * 2 })) // Mocked trend but based on count
+    : [ { value: 4 }, { value: 6 }, { value: 3 }, { value: 8 }, { value: 5 }, { value: 7 }, { value: 6 } ];
 
   if (isLoading) {
     return (
@@ -101,7 +112,7 @@ export default function HomeDashboardWeb() {
             <Brain className="w-6 h-6 text-blue-600" />
           </div>
           <p className="text-sm text-blue-900 leading-relaxed">
-            <span className="font-semibold underline decoration-blue-300">AI Recommendation:</span> Your career analysis shows the next 3 months are perfect for upskilling. We've updated your path with new certification recommendations.
+            <span className="font-semibold underline decoration-blue-300">AI Recommendation:</span> {insights?.forecast?.message || "Welcome to FutureVision AI! Run your first simulation to generate actionable insights for your balance path."}
           </p>
         </div>
 
@@ -331,7 +342,7 @@ export default function HomeDashboardWeb() {
               </div>
 
               <div className="space-y-4">
-                {stats.simulation_count === 0 ? (
+                 {history.length === 0 ? (
                   <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
                     <Zap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="font-bold text-gray-800 mb-1">No Simulations Yet</p>
@@ -341,48 +352,31 @@ export default function HomeDashboardWeb() {
                     </button>
                   </div>
                 ) : (
-                [
-                  {
-                    title: 'Career Change to Tech Industry',
-                    prob: '87%',
-                    time: '2 hours ago',
-                    impact: 'HIGH',
-                    color: 'blue',
-                    icon: Sparkles
-                  },
-                  {
-                    title: 'Investment in Mutual Funds',
-                    prob: '₹12.5L est.',
-                    time: 'Yesterday',
-                    impact: 'POSITIVE',
-                    color: 'emerald',
-                    icon: Activity
-                  },
-                ].map((sim, i) => (
+                history.slice(0, 3).map((sim, i) => (
                   <WebCard key={i} hover onClick={() => navigate('/analytics')} className="p-4 border-gray-100 hover:border-blue-200 group">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform ${sim.color === 'blue' ? 'bg-blue-100' :
-                            sim.color === 'emerald' ? 'bg-emerald-100' : 'bg-orange-100'
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform ${i % 3 === 0 ? 'bg-blue-100' :
+                            i % 3 === 1 ? 'bg-emerald-100' : 'bg-orange-100'
                           }`}>
-                          <sim.icon className={`w-7 h-7 ${sim.color === 'blue' ? 'text-blue-600' :
-                              sim.color === 'emerald' ? 'text-emerald-600' : 'text-orange-600'
+                          <Activity className={`w-7 h-7 ${i % 3 === 0 ? 'text-blue-600' :
+                              i % 3 === 1 ? 'text-emerald-600' : 'text-orange-600'
                             }`} />
                         </div>
                         <div>
-                          <h3 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase text-sm tracking-tight">{sim.title}</h3>
+                          <h3 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase text-sm tracking-tight">{sim.decision_input || sim.category || 'Simulation'}</h3>
                           <p className="text-xs text-gray-500 font-medium whitespace-pre-wrap">
-                            Outcome probability: <span className={`font-bold ${sim.color === 'blue' ? 'text-blue-600' :
-                                sim.color === 'emerald' ? 'text-emerald-600' : 'text-orange-600'
-                              }`}>{sim.prob}</span> • {sim.time}
+                            Outcome probability: <span className={`font-bold ${i % 3 === 0 ? 'text-blue-600' :
+                                i % 3 === 1 ? 'text-emerald-600' : 'text-orange-600'
+                              }`}>{Math.round(sim.success_probability)}%</span> • {new Date(sim.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <div className={`px-3 py-1 rounded-lg text-[10px] font-black border ${sim.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                          sim.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                      <div className={`px-3 py-1 rounded-lg text-[10px] font-black border ${i % 3 === 0 ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                          i % 3 === 1 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                             'bg-orange-50 text-orange-600 border-orange-100'
                         }`}>
-                        {sim.impact}
+                        {sim.success_probability > 70 ? 'SUCCESS' : sim.success_probability > 40 ? 'MODERATE' : 'RISK'}
                       </div>
                     </div>
                   </WebCard>
@@ -452,23 +446,25 @@ export default function HomeDashboardWeb() {
             <WebCard className="bg-red-50 border-red-100 border-2">
               <div className="flex items-center space-x-3 mb-4 text-red-600">
                 <AlertTriangle className="w-6 h-6 animate-bounce" />
-                <h3 className="font-black tracking-tight text-red-900">PRIORITY ALERTS (3)</h3>
+                <h3 className="font-black tracking-tight text-red-900">PRIORITY ALERTS ({insights?.alerts?.length || 0})</h3>
               </div>
               <div className="space-y-3 mb-6">
-                <div className="p-3 bg-white/80 rounded-xl border border-red-200">
-                  <p className="text-xs font-bold text-red-900">BUDGET OVERSPEND RISK</p>
-                  <p className="text-[10px] text-red-700">Projected deficit in May based on current trends.</p>
-                </div>
-                <div className="p-3 bg-white/80 rounded-xl border border-orange-200 text-orange-900">
-                  <p className="text-xs font-bold">CAREER STAGNATION</p>
-                  <p className="text-[10px] text-orange-700">Lack of new skill inputs in the last 14 days.</p>
-                </div>
+                {(insights?.alerts?.length || 0) === 0 ? (
+                  <p className="text-xs text-gray-600 italic">No urgent alerts detected. Your plan is on track.</p>
+                ) : (
+                  insights?.alerts?.slice(0, 2).map((alert: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-white/80 rounded-xl border border-red-200">
+                      <p className="text-xs font-bold text-red-900 uppercase">{alert.title}</p>
+                      <p className="text-[10px] text-red-700">{alert.message}</p>
+                    </div>
+                  ))
+                )}
               </div>
               <button
-                onClick={() => navigate('/priority-alerts')}
+                onClick={() => navigate('/analytics')}
                 className="w-full py-2 bg-red-600 text-white rounded-lg font-black text-xs hover:bg-red-700 transition-all shadow-lg shadow-red-500/20"
               >
-                RESOLVE ALERTS NOW
+                VIEW FULL ANALYSIS
               </button>
             </WebCard>
           </div>

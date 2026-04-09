@@ -17,7 +17,9 @@ export default function LoginScreenWeb() {
 
   useEffect(() => {
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
       setSavedPhoto('');
       setIsFetchingPhoto(false);
       return;
@@ -53,19 +55,12 @@ export default function LoginScreenWeb() {
     try {
       const response = await loginUser(email, password);
       if (response.status) {
-        const previousUserStr = localStorage.getItem('user');
-        const previousUser = previousUserStr ? JSON.parse(previousUserStr) : null;
-        const previousPhoto =
-          previousUser?.email === response.user?.email
-            ? normalizeProfilePhoto(previousUser?.profile_photo)
-            : '';
         const loginPhoto = normalizeProfilePhoto(response.user?.profile_photo);
-        const mergedUser = {
-          ...previousUser,
+        const userData = {
           ...response.user,
-          profile_photo: loginPhoto || previousPhoto || '',
+          profile_photo: loginPhoto || '',
         };
-        saveUserToStorage(mergedUser);
+        saveUserToStorage(userData);
         navigate('/home');
       } else {
         setError(response.message || 'Login failed');
