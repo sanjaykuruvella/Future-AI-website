@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
-import { loginUser } from '../../api/auth';
-import { normalizeProfilePhoto } from '../../utils/profilePhoto';
+import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, User } from 'lucide-react';
+import { getProfilePhoto, loginUser } from '../../api/auth';
+import { normalizeProfilePhoto, saveUserToStorage } from '../../utils/profilePhoto';
 
 export default function LoginScreenWeb() {
   const navigate = useNavigate();
@@ -12,7 +12,39 @@ export default function LoginScreenWeb() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [savedPhoto, setSavedPhoto] = useState('');
+  const [isFetchingPhoto, setIsFetchingPhoto] = useState(false);
 
+  useEffect(() => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setSavedPhoto('');
+      setIsFetchingPhoto(false);
+      return;
+    }
+
+    let isActive = true;
+    const timeoutId = window.setTimeout(async () => {
+      setIsFetchingPhoto(true);
+      try {
+        const profile = await getProfilePhoto(trimmedEmail);
+        if (!isActive) return;
+        setSavedPhoto(normalizeProfilePhoto(profile?.profile_photo));
+      } catch {
+        if (!isActive) return;
+        setSavedPhoto('');
+      } finally {
+        if (isActive) {
+          setIsFetchingPhoto(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [email]);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -33,7 +65,7 @@ export default function LoginScreenWeb() {
           ...response.user,
           profile_photo: loginPhoto || previousPhoto || '',
         };
-        localStorage.setItem('user', JSON.stringify(mergedUser));
+        saveUserToStorage(mergedUser);
         navigate('/home');
       } else {
         setError(response.message || 'Login failed');
@@ -110,9 +142,16 @@ export default function LoginScreenWeb() {
 
         {/* Right Side - Login Form */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200 p-10 shadow-2xl">
-          <div className="mb-8">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+              {savedPhoto ? (
+                <img src={savedPhoto} alt="Saved profile" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-9 w-9 text-white" />
+              )}
+            </div>
             <h3 className="text-3xl font-bold text-gray-900 mb-2">Log In</h3>
-            <p className="text-gray-600">Access your AI decision assistant</p>
+            <p className="text-gray-600">{isFetchingPhoto ? 'Checking saved profile photo...' : 'Access your AI decision assistant'}</p>
           </div>
 
           {error && (
@@ -220,3 +259,7 @@ export default function LoginScreenWeb() {
     </div>
   );
 }
+
+
+
+

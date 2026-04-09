@@ -19,3 +19,13 @@ export function normalizeProfilePhoto(profilePhoto?: string | null): string {
 
   return trimmedPhoto;
 }
+export const USER_PROFILE_UPDATED_EVENT = "user-profile-updated";
+
+export function saveUserToStorage(user: Record<string, unknown>) {
+  localStorage.setItem("user", JSON.stringify(user));
+  window.dispatchEvent(
+    new CustomEvent(USER_PROFILE_UPDATED_EVENT, {
+      detail: user,
+    })
+  );
+}

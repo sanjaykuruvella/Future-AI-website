@@ -1,16 +1,17 @@
 import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
-import { User, Calendar, TrendingUp, BookOpen } from 'lucide-react';
+import { User, Calendar, TrendingUp, BookOpen, Upload } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { getPredictionsHistory } from '../../api/prediction';
 import { getProfile, updateProfile } from '../../api/auth';
-import { normalizeProfilePhoto } from '../../utils/profilePhoto';
+import { normalizeProfilePhoto, saveUserToStorage } from '../../utils/profilePhoto';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [joinDate, setJoinDate] = useState<string>('Feb 2026');
   const [photoLoadError, setPhotoLoadError] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -34,7 +35,7 @@ export default function ProfileScreen() {
             ...profileData,
             profile_photo: normalizedPhoto,
           };
-          localStorage.setItem('user', JSON.stringify(updatedUser));
+          saveUserToStorage(updatedUser);
           setUser(updatedUser);
         }
       }).catch((err) => {
@@ -52,6 +53,47 @@ export default function ProfileScreen() {
     }
   }, [navigate]);
 
+  const handlePhotoSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      console.error('Profile photo must be less than 2MB');
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      if (typeof reader.result === 'string' && user) {
+        const normalizedPhoto = normalizeProfilePhoto(reader.result);
+        try {
+          const updated = await updateProfile(
+            user.user_id,
+            user.name || '',
+            user.email || '',
+            normalizedPhoto
+          );
+
+          if (updated?.status === false) {
+            throw new Error(updated?.error || updated?.message || 'Failed to update profile photo');
+          }
+
+          const updatedUser = {
+            ...user,
+            ...(updated?.user || {}),
+            profile_photo: normalizeProfilePhoto(updated?.user?.profile_photo || normalizedPhoto),
+          };
+          setUser(updatedUser);
+          saveUserToStorage(updatedUser);
+        } catch (err) {
+          console.error('Failed to save profile photo from app:', err);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
   const quickStats = [
     { label: 'Avg Score', value: history.length > 0 ? Math.round(history.reduce((sum, pred) => sum + (parseFloat(pred.success_probability) || 0), 0) / history.length) : 0, color: 'from-blue-600 to-purple-600' },
     { label: 'Predictions', value: history.length, color: 'from-green-600 to-blue-600' },
@@ -69,66 +111,38 @@ export default function ProfileScreen() {
       <div className="h-full flex flex-col px-6 py-8">
         {/* Profile Header */}
         <GlassCard className="mb-6 text-center">
-          <div className="relative mx-auto mb-4 w-36 h-36">
-            <div className="relative w-full h-full rounded-full bg-blue-500 shadow-2xl flex items-center justify-center">
+          <div className="relative mx-auto mb-4" style={{ width: 160, height: 160 }}>
+            <div className="absolute left-0 top-0 rounded-full overflow-hidden bg-blue-500 shadow-2xl flex items-center justify-center" style={{ width: 144, height: 144, minWidth: 144, minHeight: 144 }}>
               {user?.profile_photo ? (
                 <img
                   src={normalizeProfilePhoto(user.profile_photo)}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white"
+                  className="absolute inset-0 rounded-full object-cover" style={{ width: "100%", height: "100%" }}
+                  
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-blue-500 flex items-center justify-center">
                   <User className="w-14 h-14 text-white" />
                 </div>
               )}
-
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 w-10 h-10 bg-white rounded-full border-2 border-blue-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-              >
-                <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-500" fill="currentColor">
-                  <path d="M12 5a3 3 0 0 1 3 3h2a1 1 0 0 1 0 2h-2a3 3 0 0 1-6 0H7a1 1 0 0 1 0-2h2a3 3 0 0 1 3-3zm-4 9a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H8z" />
-                </svg>
-              </button>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = async () => {
-                    if (typeof reader.result === 'string' && user) {
-                      const normalizedPhoto = normalizeProfilePhoto(reader.result);
-                      try {
-                        const updated = await updateProfile(
-                          user.user_id,
-                          user.name || '',
-                          user.email || '',
-                          normalizedPhoto
-                        );
-
-                        if (updated?.status === false) {
-                          throw new Error(updated?.error || updated?.message || 'Failed to update profile photo');
-                        }
-
-                        const updatedUser = { ...user, profile_photo: normalizedPhoto };
-                        setUser(updatedUser);
-                        localStorage.setItem('user', JSON.stringify(updatedUser));
-                      } catch (err) {
-                        console.error('Failed to save profile photo from app:', err);
-                      }
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }}
-                className="hidden"
-              />
             </div>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-1 right-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border-2 border-blue-500 bg-white text-slate-900 shadow-lg transition hover:scale-105"
+            >
+              <Upload className="h-5 w-5" />
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoSelection}
+              className="hidden"
+            />
           </div>
+
           <div className="text-center">
             <h2 className="text-xl font-bold text-gray-800 mb-1">{user?.name || 'User'}</h2>
             <p className="text-sm text-gray-600 mb-1">{user?.email || 'user@email.com'}</p>
@@ -174,3 +188,19 @@ export default function ProfileScreen() {
     </MobileLayout>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

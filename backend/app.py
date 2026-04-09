@@ -22,31 +22,58 @@ from urllib.parse import unquote
 # ---------------------------------
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'this_is_secret_key_change_it'
-app.config['BASE_URL'] = 'http://192.168.168.162:5000'  # 👈 Change this if using ngrok
+app.config['BASE_URL'] = 'http://180.235.121.253:8142/'  # 👈 Change this if using ngrok
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 CORS(app)
 
 
 def normalize_profile_photo(profile_photo):
+    """Convert DB photo value to data URL for frontend rendering."""
     if not profile_photo:
-        return profile_photo
+        return ""
 
     if isinstance(profile_photo, bytes):
         profile_photo = profile_photo.decode('utf-8', errors='ignore')
 
-    profile_photo = str(profile_photo).strip()
-    if not profile_photo:
-        return profile_photo
+    photo_str = str(profile_photo).strip()
+    if not photo_str:
+        return ""
 
-    if profile_photo.startswith('data:image/'):
-        return profile_photo
+    if photo_str.startswith('data:image/'):
+        return photo_str
 
-    # Support photos stored as plain base64 in the database.
-    if re.fullmatch(r'[A-Za-z0-9+/=\s]+', profile_photo):
-        compact_photo = re.sub(r'\s+', '', profile_photo)
+    # Plain base64 stored in DB -> return as JPEG data URL.
+    compact_photo = re.sub(r'\s+', '', photo_str)
+    if re.fullmatch(r'[A-Za-z0-9+/=]+', compact_photo):
         return f'data:image/jpeg;base64,{compact_photo}'
 
-    return profile_photo
+    return photo_str
+
+
+def normalize_profile_photo_for_db(profile_photo):
+    """Normalize incoming photo for database storage as plain base64."""
+    if not profile_photo:
+        return None
+
+    if isinstance(profile_photo, bytes):
+        profile_photo = profile_photo.decode('utf-8', errors='ignore')
+
+    photo_str = str(profile_photo).strip()
+    if not photo_str:
+        return None
+
+    if photo_str.startswith('data:image/'):
+        # Strip data URI prefix:
+        idx = photo_str.find('base64,')
+        if idx != -1:
+            return photo_str[idx + len('base64,'):]
+
+    # If already base64 string, keep clean form. Otherwise keep as-is if it's URL.
+    compact_photo = re.sub(r'\s+', '', photo_str)
+    if re.fullmatch(r'[A-Za-z0-9+/=]+', compact_photo):
+        return compact_photo
+
+    return photo_str
 
 # Email validation helper (real-world valid emails beyond regex)
 def is_valid_email(email):
@@ -227,24 +254,41 @@ def login():
 @app.route('/update_profile/<int:user_id>', methods=['PUT'])
 def update_profile(user_id):
     try:
-        data = request.json
+        data = request.get_json() or {}
 
         name = data.get('name')
         email = data.get('email')
-        profile_photo = data.get('profile_photo')
+        profile_photo_raw = normalize_profile_photo_for_db(data.get('profile_photo'))
 
-        cursor = mysql.connection.cursor()
+        # Safety cap: do not allow extremely large images to exceed DB constraints.
+        if profile_photo_raw and len(profile_photo_raw) > 5 * 1024 * 1024:  # 5MB base64 max
+            return jsonify({"status": False, "error": "Profile photo is too large"}), 413
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
         cursor.execute("""
             UPDATE users
             SET name=%s,email=%s,profile_photo=%s
             WHERE user_id=%s
-        """, (name, email, profile_photo, user_id))
+        """, (name, email, profile_photo_raw, user_id))
 
         mysql.connection.commit()
+
+        cursor.execute(
+            "SELECT user_id,name,email,profile_photo,created_at FROM users WHERE user_id=%s",
+            (user_id,)
+        )
+        user = cursor.fetchone()
         cursor.close()
 
-        return jsonify({"status": True, "message": "Profile Updated Successfully"})
+        if user:
+            user['profile_photo'] = normalize_profile_photo(user.get('profile_photo'))
+
+        return jsonify({
+            "status": True,
+            "message": "Profile Updated Successfully",
+            "user": user,
+        })
     except Exception as e:
         print("UPDATE PROFILE ERROR:", str(e))
         return jsonify({"status": False, "error": str(e)}), 500
@@ -275,16 +319,22 @@ def update_email():
 # ---------------------------------
 @app.route('/update-profile-photo', methods=['POST'])
 def update_profile_photo():
-    data = request.get_json()
+    data = request.get_json() or {}
 
     email = data.get("email")
-    profile_photo = data.get("profile_photo")
+    profile_photo_raw = normalize_profile_photo_for_db(data.get("profile_photo"))
+
+    if not email:
+        return jsonify({"status": "error", "message": "Email is required"}), 400
+
+    if profile_photo_raw and len(profile_photo_raw) > 5 * 1024 * 1024:
+        return jsonify({"status": "error", "message": "Profile photo too large"}), 413
 
     cur = mysql.connection.cursor()
 
     cur.execute(
         "UPDATE users SET profile_photo=%s WHERE email=%s",
-        (profile_photo, email)
+        (profile_photo_raw, email)
     )
 
     mysql.connection.commit()
@@ -299,14 +349,20 @@ def update_profile_photo():
 @app.route('/upload-profile-photo', methods=['POST'])
 def upload_profile_photo():
     try:
-        data = request.json
+        data = request.json or {}
         email = data.get("email")
-        profile_photo = data.get("profile_photo")
+        profile_photo_raw = normalize_profile_photo_for_db(data.get("profile_photo"))
+
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        if profile_photo_raw and len(profile_photo_raw) > 5 * 1024 * 1024:
+            return jsonify({"error": "Profile photo too large"}), 413
 
         cursor = mysql.connection.cursor()
 
         query = "UPDATE users SET profile_photo=%s WHERE email=%s"
-        cursor.execute(query, (profile_photo, email))
+        cursor.execute(query, (profile_photo_raw, email))
         mysql.connection.commit()
 
         return jsonify({
@@ -458,7 +514,7 @@ def forgot_password_email():
         token = serializer.dumps(email, salt='reset-password')
 
         # 🔗 Reset link (uses app config BASE_URL)
-        reset_link = f"{app.config.get('BASE_URL', 'http://192.168.168.162:5000')}/reset_password/{token}"
+        reset_link = f"{app.config.get('BASE_URL', 'http://180.235.121.253:8142/')}/reset_password/{token}"
 
         msg = Message(
             subject="Reset Your Password",
@@ -2274,3 +2330,6 @@ Message:
 # ---------------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+

@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { Sparkles, Home, Settings, User, Search, BarChart3 } from 'lucide-react';
 import { getProfile } from '../api/auth';
-import { normalizeProfilePhoto } from '../utils/profilePhoto';
+import { normalizeProfilePhoto, saveUserToStorage, USER_PROFILE_UPDATED_EVENT } from '../utils/profilePhoto';
 
 interface WebLayoutProps {
   children: ReactNode;
@@ -71,7 +71,7 @@ export function WebLayout({
           ...profileData,
           profile_photo: resolvedPhoto,
         };
-        localStorage.setItem('user', JSON.stringify(mergedUser));
+        saveUserToStorage(mergedUser);
       })
       .catch((err) => {
         console.error('Failed to refresh profile photo in header:', err);
@@ -101,23 +101,35 @@ export function WebLayout({
           const freshPhoto = normalizeProfilePhoto(profileData?.profile_photo);
           const resolvedPhoto = freshPhoto || localPhoto || '';
           setHeaderPhoto(resolvedPhoto);
-          localStorage.setItem('user', JSON.stringify({
+          saveUserToStorage({
             ...user,
             ...profileData,
             profile_photo: resolvedPhoto,
-          }));
+          });
         })
         .catch((err) => {
           console.error('Failed to refresh profile photo on focus:', err);
         });
     };
 
+    const handleProfileUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<Record<string, unknown>>;
+      const profilePhoto = normalizeProfilePhoto(
+        typeof customEvent.detail?.profile_photo === 'string'
+          ? customEvent.detail.profile_photo
+          : ''
+      );
+      setHeaderPhoto(profilePhoto);
+    };
+
     window.addEventListener('focus', refreshProfilePhoto);
     window.addEventListener('storage', refreshProfilePhoto);
+    window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated as EventListener);
 
     return () => {
       window.removeEventListener('focus', refreshProfilePhoto);
       window.removeEventListener('storage', refreshProfilePhoto);
+      window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated as EventListener);
     };
   }, []);
 
@@ -171,6 +183,7 @@ export function WebLayout({
                       src={headerPhoto}
                       alt="Profile"
                       className="w-full h-full object-cover"
+                      
                       onError={() => setHeaderPhoto('')}
                     />
                   ) : (
@@ -277,3 +290,6 @@ function NavItem({ icon, label, onClick, active = false }: NavItemProps) {
     </button>
   );
 }
+
+
+

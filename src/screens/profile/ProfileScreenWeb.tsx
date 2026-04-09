@@ -5,7 +5,7 @@ import { User, Upload, TrendingUp, Target, Sparkles, Loader2, ChevronRight } fro
 import { useState, useEffect, useRef } from 'react';
 import { getPredictionsHistory } from '../../api/prediction';
 import { updateProfile, getProfile } from '../../api/auth';
-import { normalizeProfilePhoto } from '../../utils/profilePhoto';
+import { normalizeProfilePhoto, saveUserToStorage } from '../../utils/profilePhoto';
 
 export default function ProfileScreenWeb() {
     const navigate = useNavigate();
@@ -42,7 +42,6 @@ export default function ProfileScreenWeb() {
 
             // Fetch full profile from database (for the latest photo and user info)
             getProfile(userData.email).then(profileData => {
-                console.log("Profile response:", profileData);
                 if (profileData) {
                     const normalizedPhoto = normalizeProfilePhoto(profileData.profile_photo || userData.profile_photo);
                     if (normalizedPhoto) {
@@ -50,7 +49,7 @@ export default function ProfileScreenWeb() {
                         setPhotoLoadError(false);
                     }
                     const updatedUser = { ...userData, ...profileData, profile_photo: normalizedPhoto };
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    saveUserToStorage(updatedUser);
                     setUser(updatedUser);
                 } else {
                     console.log("No profile data available in database for this user");
@@ -91,15 +90,14 @@ export default function ProfileScreenWeb() {
             if (updated?.status) {
                 const updatedUser = {
                     ...user,
-                    name: editName,
-                    email: editEmail,
-                    profile_photo: profilePhotoToSave,
+                    ...(updated?.user || {}),
+                    name: updated?.user?.name || editName,
+                    email: updated?.user?.email || editEmail,
+                    profile_photo: normalizeProfilePhoto(updated?.user?.profile_photo || profilePhotoToSave),
                 };
                 setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser));
+                saveUserToStorage(updatedUser);
                 setIsEditing(false);
-            } else {
-                console.error('Profile update failed', updated?.error || updated?.message);
             }
         } catch (err) {
             console.error('Profile update error', err);
@@ -129,18 +127,39 @@ export default function ProfileScreenWeb() {
 
             const updatedUser = {
                 ...user,
-                name: editName || user.name,
-                email: editEmail || user.email,
-                profile_photo: normalizedPhoto,
+                ...(updated?.user || {}),
+                name: updated?.user?.name || editName || user.name,
+                email: updated?.user?.email || editEmail || user.email,
+                profile_photo: normalizeProfilePhoto(updated?.user?.profile_photo || normalizedPhoto),
             };
             setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            saveUserToStorage(updatedUser);
         } catch (err: any) {
             console.error('Profile photo upload error', err);
             setHasError(err?.message || 'Unable to upload profile photo to database.');
         } finally {
             setIsUploadingPhoto(false);
         }
+    };
+
+    const handlePhotoSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            setHasError('Profile photo must be less than 2MB');
+            e.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === 'string') {
+                handlePhotoUpload(reader.result);
+            }
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
     };
 
     const behavioralData = [
@@ -183,50 +202,42 @@ export default function ProfileScreenWeb() {
           <div className="lg:col-span-4 flex flex-col gap-4">
             {/* Profile Card */}
             <div className="mx-auto w-full max-w-md rounded-3xl bg-white border border-gray-200 shadow-lg p-6">
-              <div className="relative mx-auto mb-4 flex items-center justify-center">
-                <div className="relative w-36 h-36 rounded-full bg-blue-500 shadow-2xl flex items-center justify-center">
+              <div className="relative mx-auto mb-4 flex items-center justify-center" style={{ width: 160, height: 160 }}>
+                <div className="absolute left-0 top-0 rounded-full overflow-hidden bg-blue-500 shadow-2xl flex items-center justify-center" style={{ width: 144, height: 144, minWidth: 144, minHeight: 144 }}>
                   {(selectedPhoto || user?.profile_photo) && !photoLoadError ? (
                     <img
                       src={normalizeProfilePhoto(selectedPhoto || user?.profile_photo)}
                       alt="Profile"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-white"
+                      className="absolute inset-0 rounded-full object-cover" style={{ width: "100%", height: "100%" }}
+                      
                       onError={() => {
-                        console.warn("Profile photo failed to load");
                         setPhotoLoadError(true);
                       }}
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-blue-500 flex items-center justify-center">
                       <User className="w-14 h-14 text-white" />
                     </div>
                   )}
-
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute right-0 bottom-0 -translate-x-2 translate-y-2 w-10 h-10 bg-white rounded-full border-2 border-blue-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-                  >
-                    <Upload className="w-5 h-5 text-blue-500" />
-                  </button>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        if (typeof reader.result === 'string') {
-                          handlePhotoUpload(reader.result);
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    }}
-                    className="hidden"
-                  />
                 </div>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-1 right-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border-2 border-blue-500 bg-white text-slate-900 shadow-lg transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={isUploadingPhoto}
+                >
+                  <Upload className="h-5 w-5" />
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelection}
+                  className="hidden"
+                />
               </div>
+
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">{user?.name || 'Your Name'}</h2>
                 <p className="text-sm text-gray-600 mb-1">{user?.email || 'user@example.com'}</p>
@@ -394,3 +405,17 @@ function ActivityItem({ icon, title, description, time }: {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

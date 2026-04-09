@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://localhost:5000';
+export const API_BASE_URL = 'http://180.235.121.253:8142';
 
 export async function apiRequest<T>(
     endpoint: string,

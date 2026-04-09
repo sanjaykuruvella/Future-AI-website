@@ -4,6 +4,7 @@ import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
 import { User, Loader2 } from 'lucide-react';
 import { updateProfile } from '../../api/auth';
+import { saveUserToStorage } from '../../utils/profilePhoto';
 
 export default function AccountSettingsScreenWeb() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export default function AccountSettingsScreenWeb() {
       } else {
           // Update local storage
           const updatedUser = { ...user, name, email };
-          localStorage.setItem('user', JSON.stringify(updatedUser));
+          saveUserToStorage(updatedUser);
           setUser(updatedUser);
           setMsg({ text: 'Profile updated safely', isError: false });
           setTimeout(() => navigate('/settings'), 1000);
@@ -118,3 +119,5 @@ export default function AccountSettingsScreenWeb() {
     </WebLayout>
   );
 }
+
+

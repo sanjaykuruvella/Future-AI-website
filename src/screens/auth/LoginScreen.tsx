@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
-import { Mail, Lock, Fingerprint, Globe, WifiOff, Wifi } from 'lucide-react';
+import { Mail, Lock, Fingerprint, Globe, WifiOff, Wifi, User } from 'lucide-react';
 import { useBackendStatus } from '../../hooks/useBackendStatus';
 
-import { loginUser } from '../../api/auth';
+import { getProfilePhoto, loginUser } from '../../api/auth';
+import { normalizeProfilePhoto, saveUserToStorage } from '../../utils/profilePhoto';
 import { toast } from 'sonner';
 
 export default function LoginScreen() {
@@ -15,7 +16,39 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [savedPhoto, setSavedPhoto] = useState('');
+  const [isFetchingPhoto, setIsFetchingPhoto] = useState(false);
 
+  useEffect(() => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setSavedPhoto('');
+      setIsFetchingPhoto(false);
+      return;
+    }
+
+    let isActive = true;
+    const timeoutId = window.setTimeout(async () => {
+      setIsFetchingPhoto(true);
+      try {
+        const profile = await getProfilePhoto(trimmedEmail);
+        if (!isActive) return;
+        setSavedPhoto(normalizeProfilePhoto(profile?.profile_photo));
+      } catch {
+        if (!isActive) return;
+        setSavedPhoto('');
+      } finally {
+        if (isActive) {
+          setIsFetchingPhoto(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [email]);
   const handleLogin = async () => {
     if (!email || !password) {
       toast.error('Please enter both email and password');
@@ -26,8 +59,19 @@ export default function LoginScreen() {
     try {
       const response = await loginUser(email, password);
       if (response.status) {
-        // Store user info in localStorage
-        localStorage.setItem('user', JSON.stringify(response.user));
+        const previousUserStr = localStorage.getItem('user');
+        const previousUser = previousUserStr ? JSON.parse(previousUserStr) : null;
+        const previousPhoto =
+          previousUser?.email === response.user?.email
+            ? normalizeProfilePhoto(previousUser?.profile_photo)
+            : '';
+        const loginPhoto = normalizeProfilePhoto(response.user?.profile_photo);
+        const mergedUser = {
+          ...previousUser,
+          ...response.user,
+          profile_photo: loginPhoto || previousPhoto || '',
+        };
+        saveUserToStorage(mergedUser);
         toast.success(response.message || 'Login Successful');
         navigate('/home');
       } else {
@@ -44,6 +88,13 @@ export default function LoginScreen() {
     <MobileLayout showBackButton onBack={() => navigate(-1)}>
       <div className="h-full flex flex-col items-center justify-center px-6">
         <div className="text-center mb-6">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+            {savedPhoto ? (
+              <img src={savedPhoto} alt="Saved profile" className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-9 w-9 text-white" />
+            )}
+          </div>
           <div className="flex justify-center mb-4">
             {isConnected ? (
               <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border border-green-200">
@@ -63,7 +114,7 @@ export default function LoginScreen() {
             )}
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-          <p className="text-sm text-gray-600">Sign in to continue your journey</p>
+          <p className="text-sm text-gray-600">{isFetchingPhoto ? 'Checking saved profile photo...' : 'Sign in to continue your journey'}</p>
         </div>
 
         <GlassCard className="w-full mb-6">
@@ -135,3 +186,8 @@ export default function LoginScreen() {
     </MobileLayout>
   );
 }
+
+
+
+
+
