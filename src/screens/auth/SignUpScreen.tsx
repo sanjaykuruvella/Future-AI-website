@@ -69,6 +69,8 @@ export default function SignUpScreen() {
                   onChange={(e) => setName(e.target.value)}
                   className={`w-full pl-10 pr-4 py-2.5 bg-white/50 border ${name && !/^[a-zA-Z]+$/.test(name) ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 text-sm`}
                   placeholder="John Doe"
+                  id="name"
+                  name="name"
                 />
               </div>
               {name && !/^[a-zA-Z]+$/.test(name) && (
@@ -86,6 +88,8 @@ export default function SignUpScreen() {
                   onChange={handleEmailChange}
                   className={`w-full pl-10 pr-4 py-2.5 bg-white/50 border ${emailError ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 text-sm`}
                   placeholder="you@example.com"
+                  id="email"
+                  name="email"
                 />
               </div>
               {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
@@ -101,6 +105,8 @@ export default function SignUpScreen() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="••••••••"
+                  id="password"
+                  name="password"
                 />
               </div>
             </div>

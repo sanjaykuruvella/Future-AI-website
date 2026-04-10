@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
 import { 
-  Calendar, TrendingUp, TrendingDown, DollarSign, 
-  Briefcase, Award, AlertCircle, CheckCircle, ArrowRight, Loader2 
+  Calendar, TrendingUp, DollarSign, 
+  Award, AlertCircle, CheckCircle, Loader2 
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getPredictionsHistory } from '../../api/prediction';
@@ -92,7 +92,7 @@ export default function TimelineProjectionScreenWeb() {
   ];
 
   return (
-    <WebLayout maxWidth="5xl">
+    <WebLayout maxWidth="2xl">
       <div className="mb-8">
         <div className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-100 rounded-full mb-6">
           <Calendar className="w-5 h-5 text-blue-600" />

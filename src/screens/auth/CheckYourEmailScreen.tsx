@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
@@ -6,8 +6,6 @@ import { CheckCircle2 } from 'lucide-react';
 
 export default function CheckYourEmailScreen() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const email = location.state?.email || 'your email';
 
   const handleResendEmail = () => {
     // Logic to resend email

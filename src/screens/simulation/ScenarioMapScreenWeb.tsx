@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { GitBranch, Map, Share2, Download, Layers, Play, Info, CheckCircle2, AlertCircle, Sparkles, TrendingUp, ArrowRight, Loader2 } from 'lucide-react';
+import { Map, Share2, Download, Layers, Play, Info, Sparkles, TrendingUp, ArrowRight, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getPredictionsHistory } from '../../api/prediction';
 

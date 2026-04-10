@@ -9,7 +9,6 @@ export default function RiskAlertsScreenWeb() {
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -22,7 +21,7 @@ export default function RiskAlertsScreenWeb() {
           setAlerts(response.alerts);
         }
       } catch (err: any) {
-        setError('Failed to load alerts');
+        console.error('Failed to load alerts:', err);
       } finally {
         setIsLoading(false);
       }

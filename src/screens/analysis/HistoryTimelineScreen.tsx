@@ -81,7 +81,7 @@ export default function HistoryTimelineScreen() {
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-600"></div>
 
           <div className="space-y-6">
-            {timeline.map((item, index) => (
+            {timeline.map((item) => (
               <div key={item.id} className="relative pl-16">
                 {/* Timeline dot */}
                 <div className="absolute left-3 top-6">

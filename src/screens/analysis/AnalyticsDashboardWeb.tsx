@@ -4,15 +4,13 @@ import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
 import {
   TrendingUp, BarChart3, Target,
-  ArrowUpRight, ArrowDownRight, Brain, ShieldCheck,
-  Zap,
-  GitBranch, GitCompare,
-  Activity, CheckCircle2,
-  Calendar, Clock, Sparkles
+  ArrowUpRight, ArrowDownRight, Brain,
+  Activity,
+  Clock, Sparkles
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar 
+  RadarChart, PolarGrid, PolarAngleAxis, Radar 
 } from 'recharts';
 import { getPredictionsHistory, getPredictionInsights } from '../../api/prediction';
 

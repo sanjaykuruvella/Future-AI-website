@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
-import { TrendingUp, Target, Sparkles } from 'lucide-react';
+import { TrendingUp, Target, Sparkles, Award } from 'lucide-react';
 
 export default function GrowthMetricsScreen() {
   const navigate = useNavigate();

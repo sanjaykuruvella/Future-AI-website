@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { 
   Sparkles, TrendingUp, AlertTriangle, Target, CheckCircle2, 
-  Clock, Filter, Archive, Trash2, Bell, BellOff, TrendingDown,
-  Calendar, DollarSign, Briefcase, GraduationCap, Heart, Shield
+  Filter, Trash2, Bell, BellOff,
+  DollarSign, Briefcase, GraduationCap, Heart
 } from 'lucide-react';
 
 type NotificationType = 'all' | 'insight' | 'opportunity' | 'alert' | 'goal' | 'system';
@@ -43,12 +43,12 @@ export default function NotificationsScreenWeb() {
        try {
            setIsLoading(true);
            const res = await apiRequest<any[]>(`/predictions/${user.user_id}`, 'GET');
-           const mapped = (res || []).map((p: any, i: number) => {
+           const mapped = (res || []).map((p: any, _: number) => {
                 const isCareer = p.category?.toLowerCase() === 'career';
                 return {
-                    id: p.prediction_id,
-                    type: 'insight',
-                    category: p.category?.toLowerCase() || 'general',
+                    id: Number(p.prediction_id),
+                    type: 'insight' as NotificationType,
+                    category: (p.category?.toLowerCase() || 'general') as 'career' | 'finance' | 'education' | 'health' | 'general',
                     icon: Sparkles,
                     color: isCareer ? 'text-blue-600' : 'text-green-600',
                     bgColor: isCareer ? 'bg-blue-100' : 'bg-green-100',
@@ -60,7 +60,7 @@ export default function NotificationsScreenWeb() {
                     actionable: true,
                     actionText: 'View Details',
                     actionRoute: '/analytics',
-                    priority: 'medium'
+                    priority: 'medium' as 'low' | 'medium' | 'high',
                 };
            });
            setNotifications(mapped);

@@ -22,9 +22,9 @@ export default function SignUpScreenWeb() {
       return;
     }
 
-    const nameRegex = /^[a-zA-Z]+$/;
+    const nameRegex = /^[a-zA-Z\s]+$/;
     if (!nameRegex.test(formData.name)) {
-      toast.error('Full Name must contain only letters (no spaces)');
+      toast.error('Full Name must contain only letters and spaces');
       return;
     }
 
@@ -160,6 +160,8 @@ export default function SignUpScreenWeb() {
                   className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${formData.name && !/^[a-zA-Z]+$/.test(formData.name) ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
                   placeholder="John Doe"
                   required
+                  id="name"
+                  name="name"
                 />
               </div>
               {formData.name && !/^[a-zA-Z]+$/.test(formData.name) && (
@@ -183,6 +185,8 @@ export default function SignUpScreenWeb() {
                   className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'} rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
                   placeholder="you@example.com"
                   required
+                  id="email"
+                  name="email"
                 />
               </div>
               {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
@@ -206,6 +210,8 @@ export default function SignUpScreenWeb() {
                   className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="Create a strong password"
                   required
+                  id="password"
+                  name="password"
                 />
                 <button
                   type="button"

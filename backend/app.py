@@ -157,9 +157,9 @@ def register():
         if not name or not email or not password:
             return jsonify({"message": "Please fill in all fields"}), 400
 
-        name_pattern = r"^[a-zA-Z]+$"
+        name_pattern = r"^[a-zA-Z\s]+$"
         if not re.match(name_pattern, name):
-            return jsonify({"message": "Full Name must contain only letters (no spaces)"}), 400
+            return jsonify({"message": "Full Name must contain only letters and spaces"}), 400
 
         email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_pattern, email.strip()):

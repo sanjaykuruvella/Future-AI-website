@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { TrendingUp, Zap, Star, ArrowRight, CheckCircle2, AlertCircle, Clock, Globe, Briefcase, DollarSign, Brain } from 'lucide-react';
+import { TrendingUp, Zap, Star, ArrowRight, CheckCircle2, AlertCircle, Clock, Briefcase, DollarSign, Brain } from 'lucide-react';
 
 export default function OpportunityHighlightsScreenWeb() {
     const navigate = useNavigate();

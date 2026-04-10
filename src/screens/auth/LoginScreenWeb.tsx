@@ -171,6 +171,8 @@ export default function LoginScreenWeb() {
                   placeholder="you@example.com"
                   required
                   autoComplete="new-password"
+                  id="email"
+                  name="email"
                 />
               </div>
             </div>
@@ -190,6 +192,8 @@ export default function LoginScreenWeb() {
                   placeholder="Enter your password"
                   required
                   autoComplete="new-password"
+                  id="password"
+                  name="password"
                 />
                 <button
                   type="button"

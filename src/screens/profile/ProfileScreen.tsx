@@ -11,8 +11,7 @@ export default function ProfileScreen() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
-  const [joinDate, setJoinDate] = useState<string>('Feb 2026');
-  const [photoLoadError, setPhotoLoadError] = useState<boolean>(false);
+  const joinDate = 'Feb 2026';
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function ProfileScreen() {
 
       // If local profile_photo already exists, display it immediately
       if (userData.profile_photo) {
-        setUser(prev => ({ ...prev, profile_photo: normalizeProfilePhoto(userData.profile_photo) }));
+        setUser((prev: any) => ({ ...prev, profile_photo: normalizeProfilePhoto(userData.profile_photo) }));
       }
 
       // Fetch full profile from database (for the latest photo and user info)

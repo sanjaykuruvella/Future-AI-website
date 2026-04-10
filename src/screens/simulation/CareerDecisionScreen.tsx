@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
-import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
 
 export default function CareerDecisionScreen() {

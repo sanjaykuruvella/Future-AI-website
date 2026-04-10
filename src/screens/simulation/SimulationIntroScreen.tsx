@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
-import { GitBranch, Target, Brain } from 'lucide-react';
+import { GitBranch, Brain } from 'lucide-react';
 
 export default function SimulationIntroScreen() {
   const navigate = useNavigate();

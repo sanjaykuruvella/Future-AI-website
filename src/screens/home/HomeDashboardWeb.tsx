@@ -68,7 +68,7 @@ export default function HomeDashboardWeb() {
     : [ { value: 65 }, { value: 72 }, { value: 68 }, { value: 78 }, { value: 82 }, { value: 85 }, { value: 87 } ];
 
   const simulationData = history.length > 0
-    ? [...history].reverse().slice(-7).map((h, i) => ({ value: (i + 1) * 2 })) // Mocked trend but based on count
+    ? [...history].reverse().slice(-7).map((_, i) => ({ value: (i + 1) * 2 })) // Mocked trend but based on count
     : [ { value: 4 }, { value: 6 }, { value: 3 }, { value: 8 }, { value: 5 }, { value: 7 }, { value: 6 } ];
 
   if (isLoading) {

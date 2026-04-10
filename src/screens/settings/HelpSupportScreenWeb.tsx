@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { HelpCircle, Book, MessageCircle, Mail, FileText, Video, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { HelpCircle, Mail, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { submitSupport } from '../../api/prediction';
 import { useState } from 'react';
 

@@ -2,24 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { 
-  TrendingUp, Award, Target, Sparkles, Calendar, Download,
-  ArrowUpRight, ArrowDownRight, TrendingDown,
-  Zap, Clock, Activity,
+  TrendingUp, Award, Target, Sparkles, Calendar,
+  ArrowUpRight, ArrowDownRight,
+  Zap,
   Trophy, Star,
   Loader2
 } from 'lucide-react';
 import { 
-  LineChart, Line, AreaChart, Area, BarChart, Bar, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  RadialBarChart, RadialBar, PolarAngleAxis, ComposedChart
+  AreaChart, Area, BarChart, Bar, 
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { getPredictionsHistory } from '../../api/prediction';
 
-type Period = 'week' | 'month' | 'quarter' | 'year';
-
 export default function GrowthMetricsScreenWeb() {
   const navigate = useNavigate();
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>('month');
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -140,13 +136,6 @@ export default function GrowthMetricsScreenWeb() {
         { month: 'Nov', quality: 75, success: 78, alignment: 86 },
         { month: 'Dec', quality: 78, success: 79, alignment: 87 }
       ];
-
-  // Radial chart data for current metrics
-  const radialData = metrics.map(m => ({
-    name: m.label,
-    value: m.current,
-    fill: `var(--color-${m.color})`
-  }));
 
     if (!history || history.length === 0) {
     return (

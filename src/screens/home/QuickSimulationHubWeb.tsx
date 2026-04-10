@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { WebCard } from '../../components/WebCard';
-import { Briefcase, TrendingUp, GraduationCap, ArrowRight, Sparkles, Target } from 'lucide-react';
+import { Briefcase, TrendingUp, GraduationCap, Sparkles, Target } from 'lucide-react';
 
 export default function QuickSimulationHubWeb() {
   const navigate = useNavigate();

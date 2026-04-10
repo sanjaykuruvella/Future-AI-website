@@ -59,12 +59,12 @@ import GoalsScreenWeb from "./screens/analysis/GoalsScreenWeb";
 
 // Web Simulation Components
 import PredictionSummaryScreenWeb from "./screens/simulation/PredictionSummaryScreenWeb";
-import ScenarioMapScreen from "./screens/simulation/ScenarioMapScreen";
+import ScenarioMapScreenWeb from "./screens/simulation/ScenarioMapScreenWeb";
 import TimelineProjectionScreenWeb from "./screens/simulation/TimelineProjectionScreenWeb";
-import RiskVsRewardScreen from "./screens/simulation/RiskVsRewardScreen";
+import RiskVsRewardScreenWeb from "./screens/simulation/RiskVsRewardScreenWeb";
 
 // Home Components
-import OpportunityHighlightsScreen from "./screens/home/OpportunityHighlightsScreen";
+import OpportunityHighlightsScreenWeb from "./screens/home/OpportunityHighlightsScreenWeb";
 import RiskAlertsScreenWeb from "./screens/home/RiskAlertsScreenWeb";
 
 // All analysis and profile screens now in web format
@@ -116,10 +116,10 @@ export const router = createBrowserRouter([
   { path: "/analysis/alternate", element: <AlternateScenarioScreenWeb /> },
   { path: "/analysis/compare", element: <CompareFuturesScreenWeb /> },
   { path: "/simulation/prediction-summary", element: <PredictionSummaryScreenWeb /> },
-  { path: "/simulation/scenario-map", element: <ScenarioMapScreen /> },
+  { path: "/simulation/scenario-map", element: <ScenarioMapScreenWeb /> },
   { path: "/simulation/timeline", element: <TimelineProjectionScreenWeb /> },
-  { path: "/simulation/risk-reward", element: <RiskVsRewardScreen /> },
-  { path: "/opportunity-highlights", element: <OpportunityHighlightsScreen /> },
+  { path: "/simulation/risk-reward", element: <RiskVsRewardScreenWeb /> },
+  { path: "/opportunity-highlights", element: <OpportunityHighlightsScreenWeb /> },
   { path: "/priority-alerts", element: <RiskAlertsScreenWeb /> },
 
   // Catch-all redirect for any undefined routes - redirects to analytics

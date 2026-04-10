@@ -130,6 +130,8 @@ export default function LoginScreen() {
                   className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="you@example.com"
                   autoComplete="new-password"
+                  id="email"
+                  name="email"
                 />
               </div>
             </div>
@@ -145,6 +147,8 @@ export default function LoginScreen() {
                   className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="••••••••"
                   autoComplete="new-password"
+                  id="password"
+                  name="password"
                 />
               </div>
             </div>

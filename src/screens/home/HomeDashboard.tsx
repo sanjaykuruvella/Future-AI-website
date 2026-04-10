@@ -4,9 +4,9 @@ import { GlassCard } from '../../components/GlassCard';
 import { Button } from '../../components/Button';
 import { BottomNav } from '../../components/BottomNav';
 import {
-  Sparkles, TrendingUp, Target, Bell, User,
+  Sparkles, TrendingUp, Target, User,
   MessageCircle, BarChart3, History, AlertTriangle,
-  Zap, Brain, Calendar, ArrowRight
+  Zap, Brain, ArrowRight, Activity
 } from 'lucide-react';
 
 export default function HomeDashboard() {

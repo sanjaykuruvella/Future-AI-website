@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { WebLayout } from '../../components/WebLayout';
 import { 
   TrendingUp, TrendingDown, Minus, Calendar, Download, 
-  Filter, BarChart3, LineChart, PieChart, ArrowUpRight, ArrowDownRight
+  BarChart3, LineChart, ArrowUpRight
 } from 'lucide-react';
 import { LineChart as RechartsLine, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 

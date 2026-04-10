@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { MobileLayout } from '../../components/MobileLayout';
 import { GlassCard } from '../../components/GlassCard';
-import { CheckCircle2, Circle, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export default function TimelineProjectionScreen() {
   const navigate = useNavigate();
